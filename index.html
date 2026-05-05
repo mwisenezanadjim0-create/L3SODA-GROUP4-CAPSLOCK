@@ -8,21 +8,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="assets/brand-logo.png">
 </head>
 <body>
-
-    <!-- ============ HEADER ============ -->
     <header class="header">
         <div class="header-inner">
             <div class="header-logo">
                 <img src="assets/brand-logo.png" alt="Sacha's Taste">
             </div>
             <div class="header-actions">
-                <a href="#" class="btn-orange">OPENING TIMES</a>
-                <a href="#" class="btn-orange">FIND US</a>
-                <a href="#" class="btn-white">ORDER NOW</a>
+                <a href="#hero" class="btn-orange">OPENING TIMES</a>
+                <a href="#discover" class="btn-orange">FIND US</a>
+                <a href="#menu" class="btn-white">ORDER NOW</a>
                 <button class="burger-btn" id="burgerBtn" aria-label="Menu">
                     <span></span>
                     <span></span>
@@ -30,8 +29,24 @@
             </div>
         </div>
     </header>
-
-    <!-- ============ HERO ============ -->
+    <div class="nav-overlay" id="navOverlay">
+        <nav class="nav-content">
+            <ul class="nav-links">
+                <li><a href="#hero">HOME</a></li>
+                <li><a href="#delivery">DELIVERY</a></li>
+                <li><a href="#menu">OUR MENU</a></li>
+                <li><a href="#team">MEET THE TEAM</a></li>
+                <li><a href="#discover">DISCOVER US</a></li>
+            </ul>
+            <div class="nav-footer">
+                <p>Taste the deliciousness</p>
+                <div class="nav-socials">
+                    <a href="https://www.instagram.com/sachas_taste/" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+        </nav>
+    </div>
     <section class="hero" id="hero">
         <img src="assets/CEO sacha.png" alt="Chef Sacha" class="hero-chef">
         <div class="hero-logo-wrap">
@@ -49,40 +64,27 @@
             <p class="hero-tagline-quote">— this is street flavor done right.</p>
         </div>
     </section>
-
-    <!-- ============ DELIVERY ============ -->
     <section class="delivery" id="delivery">
         <div class="delivery-inner">
-            <!-- Top: intro text centered, rider photo right -->
             <div class="delivery-top">
-                <div class="delivery-top-left">
-                    <!-- empty spacer -->
-                </div>
                 <p class="delivery-intro-text">
-                    We saw a need for better, more authentic food experience in Kigali.
-                    Inspired by vibrant markets and late-night street grills.
-                    We blend traditional spices, quality ingredients, and bold techniques
+                    We saw a need for better, more authentic food experience in Kigali.<br>
+                    Inspired by vibrant markets and late-night street grills.<br>
+                    We blend traditional spices, quality ingredients, and bold techniques<br>
                     to create meals that feel both nostalgic and new.
                 </p>
+                <img src="assets/sample_food (3).jpg" alt="Delivery" class="delivery-photo">
             </div>
-            <!-- Main row: titles left, image right -->
-            <div class="delivery-main-row">
-                <div class="delivery-titles">
-                    <h2 class="delivery-title-thin">REAL FAST FOOD</h2>
-                    <h2 class="delivery-title-bold">DELIVERY</h2>
-                </div>
-                <div class="delivery-photo-wrap">
-                    <img src="assets/delivery service.jpg" alt="Delivery Rider" class="delivery-photo">
-                </div>
+            <div class="delivery-title-wrap">
+                <h2 class="delivery-title-thin">REAL FAST FOOD</h2>
+                <h2 class="delivery-title-bold">DELIVERY</h2>
             </div>
         </div>
-
-        <!-- OUR BEST ONE YET -->
         <div class="best-one-inner">
             <div class="best-one-left">
                 <div class="best-one-body">
                     <h3 class="best-label">TASTE THE DELICIOUSNESS</h3>
-                    <p>We can confidently say that there is nobody else like us out there.  We're built on total authenticity - genuine ingredients.</p>
+                    <p>We can confidently say that there is nobody else like us out there. We're built on total authenticity - genuine ingredients.</p>
                     <p>This - teamed with absolute consistency that produces incredible results every time and a team of good, honest people who love to deliver a great customer experience.</p>
                     <p>Sacha's Taste is the result of our dedication to bring happiness to you through phenomenal food, an unforgettable experience and our desire to be the absolute best at what we do.</p>
                     <p><strong>Taste the deliciousness.</strong></p>
@@ -91,16 +93,13 @@
             <div class="best-one-right">
                 <h2 class="best-one-title-thin">OUR BEST ONE</h2>
                 <h2 class="best-one-title-bold">YET!</h2>
-                <img src="assets/sample_food (6).png" alt="Food Boxes" class="best-one-img">
+                <img src="assets/sample_food (5).png" alt="Food Boxes" class="best-one-img">
             </div>
         </div>
-
-        <!-- CHECK OUT THE MENU -->
-        <div class="menu-header-wrap">
+        <div class="menu-header-wrap" id="menu">
             <h2 class="menu-title-thin">CHECK OUT THE</h2>
             <h2 class="menu-title-bold">MENU</h2>
         </div>
-
         <div class="menu-items">
             <div class="menu-item">
                 <div class="menu-item-info">
@@ -124,8 +123,6 @@
                 <img src="assets/sample_food (5).png" alt="Rice Recipe" class="menu-item-img">
             </div>
         </div>
-
-        <!-- MENU CATEGORIES -->
         <div class="menu-categories">
             <div class="menu-cat">
                 <h4>COMBO's and SPECIALS</h4>
@@ -175,8 +172,6 @@
             </div>
         </div>
     </section>
-
-    <!-- ============ MEET THE TEAM ============ -->
     <section class="team" id="team">
         <h2 class="team-title">MEET THE <span>TEAM</span></h2>
         <div class="team-grid">
@@ -203,8 +198,6 @@
             </div>
         </div>
     </section>
-
-    <!-- ============ DISCOVER US ============ -->
     <section class="discover" id="discover">
         <h2 class="discover-title">DISCOVER <span>US</span></h2>
         <div class="discover-body">
@@ -217,8 +210,6 @@
             </div>
         </div>
     </section>
-
-    <!-- ============ FOOTER ============ -->
     <footer class="footer">
         <div class="footer-inner">
             <div class="footer-left">
@@ -229,7 +220,6 @@
         </div>
         <p class="footer-copy">&copy; 2026 Sacha's Taste. All rights reserved.</p>
     </footer>
-
     <script src="script.js"></script>
 </body>
 </html>

@@ -1,5 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Scroll reveal
+    const burgerBtn = document.getElementById('burgerBtn');
+    const navOverlay = document.getElementById('navOverlay');
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    burgerBtn.addEventListener('click', () => {
+        burgerBtn.classList.toggle('active');
+        navOverlay.classList.toggle('active');
+        document.body.style.overflow = navOverlay.classList.contains('active') ? 'hidden' : '';
+    });
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            burgerBtn.classList.remove('active');
+            navOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+    });
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(e => {
             if (e.isIntersecting) {
@@ -15,12 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(s);
     });
 
-    // Watch for visible class
     const style = document.createElement('style');
     style.textContent = `section.visible { opacity: 1 !important; transform: translateY(0) !important; }`;
     document.head.appendChild(style);
 
-    // Header scroll shrink
     const header = document.querySelector('.header');
     window.addEventListener('scroll', () => {
         header.style.boxShadow = window.scrollY > 10
