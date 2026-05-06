@@ -1,7 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const preloader = document.getElementById('preloader');
+    
+    // Hide preloader after a short delay to "present" the brand
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            preloader.classList.add('fade-out');
+            document.body.classList.remove('loading');
+        }, 3000); // 3 seconds presentation
+    });
+
+    // Fallback if load event takes too long
+    setTimeout(() => {
+        if (!preloader.classList.contains('fade-out')) {
+            preloader.classList.add('fade-out');
+            document.body.classList.remove('loading');
+        }
+    }, 5000);
+
     const burgerBtn = document.getElementById('burgerBtn');
     const navOverlay = document.getElementById('navOverlay');
-    const navLinks = document.querySelectorAll('.nav-links a');
+    const navLinks = document.querySelectorAll('.nav-links a, .header-logo a');
 
     burgerBtn.addEventListener('click', () => {
         burgerBtn.classList.toggle('active');
