@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Interfaces</title>
+</head>
+<body>
+
+    <!-- INTERFACE 1: Contact Me -->
+    <h2>Contact Me</h2>
+    <form>
+        <textarea rows="5" cols="50"></textarea>
+        <button type="submit">SEND</button>
+    </form>
+
+    <br><br>
+
+    <!-- INTERFACE 2: District Selection -->
+    <form>
+        <label for="district"><strong>Choose your District :</strong></label>
+        <select id="district" name="district">
+            <option value="none">none</option>
+            <option value="Kicukiro">Kicukiro</option>
+            <option value="Muhanga">Muhanga</option>
+            <option value="Rubavu">Rubavu</option>
+            <option value="Kirehe">Kirehe</option>
+        </select>
+    </form>
+
+    <hr><br>
+
+    <!-- INTERFACE 3: Full Registration Form -->
+    <form>
+        <label for="fname"><strong>First Name</strong></label><br>
+        <input type="text" id="fname" name="fname"><br><br>
+
+        <label for="lname"><strong>Last Name</strong></label><br>
+        <input type="text" id="lname" name="lname"><br><br>
+
+        <label for="address"><strong>Address</strong></label><br>
+        <input type="text" id="address" name="address"><br><br><br>
+
+        <input type="radio" id="male" name="gender" value="Male">
+        <label for="male">Male</label><br>
+
+        <input type="radio" id="female" name="gender" value="Female">
+        <label for="female">Female</label><br><br>
+
+        <strong>Select the module you learned</strong><br>
+
+        <input type="checkbox" id="web" name="module" value="Website Development">
+        <label for="web">Website Development</label><br>
+
+        <input type="checkbox" id="ux" name="module" value="UX/UI design">
+        <label for="ux">UX/UI design</label><br>
+
+        <input type="checkbox" id="vue" name="module" value="Vue framework">
+        <label for="vue">Vue framework</label><br>
+
+        <input type="checkbox" id="version" name="module" value="Version Control">
+        <label for="version">Version Control</label><br><br>
+
+        <label for="file"><strong>Select file to upload:</strong></label>
+        <input type="file" id="file" name="file"><br><br><br>
+
+        <label for="color"><strong>Pick your Favorite color:</strong></label>
+        <input type="color" id="color" name="color"><br><br><br>
+
+        <input type="date" id="dob" name="dob">
+        <label for="dob">date of birth:</label>
+    </form>
+
+</body>
+</html>

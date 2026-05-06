@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #475569;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* ── MAIN LAYOUT ── */
+        .admin-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 2rem 0;
+            position: fixed;
+            width: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 0 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-brand h2 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            padding: 0;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            margin: 0.25rem 0;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            padding-left: 1.5rem;
+        }
+
+        .sidebar-menu .menu-section {
+            padding: 1.5rem 1rem 0.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── MAIN CONTENT ── */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--bg-secondary);
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .profile-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        /* ── DASHBOARD GRID ── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.1);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-icon.blue { background: rgba(102, 126, 234, 0.1); color: var(--primary); }
+        .stat-icon.green { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+        .stat-icon.orange { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .stat-icon.red { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+
+        /* ── TABS ── */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            padding: 1rem 0;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 500;
+            position: relative;
+            transition: color 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab:hover,
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ── TABLES ── */
+        .table-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.success { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+        .badge.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        /* ── FORMS ── */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        /* ── SETTINGS SECTIONS ── */
+        .settings-container {
+            max-width: 1200px;
+        }
+
+        .settings-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .settings-section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 1.5rem 0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            background: var(--bg-tertiary);
+            border-radius: 9999px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            left: 24px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-left h4 {
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .setting-left p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* ── MODAL ── */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.25rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: flex-end;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .admin-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .search-box {
+                max-width: 100%;
+            }
+
+            .top-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
+        /* ── UTILITIES ── */
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-2 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .gap-2 { gap: 1rem; }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 0.375rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            z-index: 300;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success { border-left: 4px solid var(--success); }
+        .notification.error { border-left: 4px solid var(--danger); }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 0.375rem;"></div>
+                <h2>Admin</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <div class="menu-section">Main</div>
+                <li><a href="#dashboard" class="menu-link active" data-tab="dashboard">📊 Dashboard</a></li>
+                <li><a href="#analytics" class="menu-link" data-tab="analytics">📈 Analytics</a></li>
+                
+                <div class="menu-section">Management</div>
+                <li><a href="#users" class="menu-link" data-tab="users">👥 Users</a></li>
+                <li><a href="#content" class="menu-link" data-tab="content">📄 Content</a></li>
+                <li><a href="#orders" class="menu-link" data-tab="orders">📦 Orders</a></li>
+                
+                <div class="menu-section">System</div>
+                <li><a href="#settings" class="menu-link" data-tab="settings">⚙️ Settings</a></li>
+                <li><a href="#security" class="menu-link" data-tab="security">🔒 Security</a></li>
+                <li><a href="#backup" class="menu-link" data-tab="backup">💾 Backup</a></li>
+                <li><a href="#logs" class="menu-link" data-tab="logs">📋 Logs</a></li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- TOP BAR -->
+            <div class="top-bar">
+                <div class="search-box">
+                    <input type="text" placeholder="Search users, orders, content...">
+                </div>
+                <div class="top-actions">
+                    <button class="btn btn-secondary">🔔 Notifications</button>
+                    <div class="profile-dropdown">
+                        <div class="profile-avatar">AD</div>
+                        <div style="font-size: 0.875rem;">
+                            <div style="font-weight: 600;">Admin</div>
+                            <div style="color: var(--text-secondary); font-size: 0.75rem;">admin@example.com</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── DASHBOARD ── -->
+            <section id="dashboard" class="tab-content active">
+                <h1 style="margin-bottom: 1.5rem;">Dashboard</h1>
+                
+                <!-- STATS -->
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-card-title">Total Users</div>
+                                <div class="stat-value">1,234</div>
+                                <div class="stat-change positive">↑ 12% from last month</div>
+                            </div>
+                            <div class="stat-icon blue">👥</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-card-title">Total Orders</div>
+                                <div class="stat-value">856</div>
+                                <div class="stat-change positive">↑ 8% from last month</div>
+                            </div>
+                            <div class="stat-icon green">📦</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-card-title">Revenue</div>
+                                <div class="stat-value">$45.2K</div>
+                                <div class="stat-change positive">↑ 23% from last month</div>
+                            </div>
+                            <div class="stat-icon orange">💰</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-card-title">Active Sessions</div>
+                                <div class="stat-value">342</div>
+                                <div class="stat-change negative">↓ 5% from last hour</div>
+                            </div>
+                            <div class="stat-icon red">🔴</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RECENT ORDERS -->
+                <div style="margin-top: 2rem;">
+                    <h2 style="margin-bottom: 1rem;">Recent Orders</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#ORD-001</td>
+                                    <td>John Doe</td>
+                                    <td>$2,500</td>
+                                    <td><span class="badge success">Completed</span></td>
+                                    <td>2024-05-01</td>
+                                </tr>
+                                <tr>
+                                    <td>#ORD-002</td>
+                                    <td>Jane Smith</td>
+                                    <td>$1,800</td>
+                                    <td><span class="badge warning">Pending</span></td>
+                                    <td>2024-05-02</td>
+                                </tr>
+                                <tr>
+                                    <td>#ORD-003</td>
+                                    <td>Bob Johnson</td>
+                                    <td>$3,200</td>
+                                    <td><span class="badge success">Completed</span></td>
+                                    <td>2024-05-03</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── ANALYTICS ── -->
+            <section id="analytics" class="tab-content">
+                <h1 style="margin-bottom: 1.5rem;">Analytics</h1>
+                <div class="stat-card">
+                    <p style="padding: 2rem;">Chart and analytics visualization would go here. Connect to charting library like Chart.js or Recharts.</p>
+                </div>
+            </section>
+
+            <!-- ── USERS MANAGEMENT ── -->
+            <section id="users" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h1>Users Management</h1>
+                    <button class="btn btn-primary" onclick="openModal('userModal')">+ Add User</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Dusabe merci</td>
+                                <td>dusabe@example.com</td>
+                                <td>Admin</td>
+                                <td><span class="badge success">Active</span></td>
+                                <td>2024-01-15</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">Edit</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mugisha samy</td>
+                                <td>mugisha@example.com</td>
+                                <td>Developer</td>
+                                <td><span class="badge success">Active</span></td>
+                                <td>2024-02-20</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">Edit</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ── CONTENT MANAGEMENT ── -->
+            <section id="content" class="tab-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h1>Content Management</h1>
+                    <button class="btn btn-primary" onclick="openModal('contentModal')">+ Create Content</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Views</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Welcome to Smart Class</td>
+                                <td>Admin</td>
+                                <td>Education</td>
+                                <td><span class="badge success">Published</span></td>
+                                <td>1,245</td>
+                                <td>
+                                    <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">Edit</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ── ORDERS MANAGEMENT ── -->
+            <section id="orders" class="tab-content">
+                <h1 style="margin-bottom: 1.5rem;">Orders Management</h1>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Product</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#ORD-001</td>
+                                <td>John Doe</td>
+                                <td>Premium Plan</td>
+                                <td>$99.99</td>
+                                <td><span class="badge success">Completed</span></td>
+                                <td>
+                                    <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">View</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ── SETTINGS ── -->
+            <section id="settings" class="tab-content">
+                <h1 style="margin-bottom: 2rem;">Settings</h1>
+                
+                <!-- GENERAL SETTINGS -->
+                <div class="settings-section">
+                    <div class="settings-section-title">🌍 General Settings</div>
+                    
+                    <div class="form-group">
+                        <label>Website Name</label>
+                        <input type="text" value="Smart Class Notes" id="siteName">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Website URL</label>
+                            <input type="text" value="https://smartclass.com" id="siteUrl">
+                        </div>
+                        <div class="form-group">
+                            <label>Support Email</label>
+                            <input type="email" value="support@smartclass.com" id="supportEmail">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Site Description</label>
+                        <textarea id="siteDescription">Smart Class Notes is an educational platform for Rwanda's students</textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveSettings('general')">Save Changes</button>
+                </div>
+
+                <!-- EMAIL SETTINGS -->
+                <div class="settings-section">
+                    <div class="settings-section-title">📧 Email Settings</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>SMTP Host</label>
+                            <input type="text" value="smtp.gmail.com" id="smtpHost">
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP Port</label>
+                            <input type="number" value="587" id="smtpPort">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>SMTP Username</label>
+                            <input type="text" id="smtpUser">
+                        </div>
+                        <div class="form-group">
+                            <label>SMTP Password</label>
+                            <input type="password" id="smtpPass">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveSettings('email')">Save Email Settings</button>
+                </div>
+
+                <!-- NOTIFICATION SETTINGS -->
+                <div class="settings-section">
+                    <div class="settings-section-title">🔔 Notification Settings</div>
+                    
+                    <div class="setting-row">
+                        <div class="setting-left">
+                            <h4>Email Notifications</h4>
+                            <p>Receive email alerts for important events</p>
+                        </div>
+                        <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-left">
+                            <h4>Order Notifications</h4>
+                            <p>Get notified when new orders are placed</p>
+                        </div>
+                        <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-left">
+                            <h4>User Signup Notifications</h4>
+                            <p>Get notified when new users register</p>
+                        </div>
+                        <div class="toggle-switch" onclick="toggleSetting(this)"></div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-left">
+                            <h4>System Error Notifications</h4>
+                            <p>Get notified of system errors and warnings</p>
+                        </div>
+                        <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                    </div>
+                </div>
+
+                <!-- APPEARANCE SETTINGS -->
+                <div class="settings-section">
+                    <div class="settings-section-title">🎨 Appearance Settings</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Theme</label>
+                            <select id="theme">
+                                <option>Dark</option>
+                                <option>Light</option>
+                                <option>Auto</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Primary Color</label>
+                            <input type="color" value="#667eea" id="primaryColor">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveSettings('appearance')">Save Appearance</button>
+                </div>
+            </section>
+
+            <!-- ── SECURITY ── -->
+            <section id="security" class="tab-content">
+                <h1 style="margin-bottom: 2rem;">Security Settings</h1>
+                
+                <div class="settings-section">
+                    <div class="settings-section-title">🔒 Password & Authentication</div>
+                    
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" id="currentPass">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="newPass">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" id="confirmPass">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="updatePassword()">Update Password</button>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">🔐 Two-Factor Authentication</div>
+                    
+                    <div class="setting-row">
+                        <div class="setting-left">
+                            <h4>Enable 2FA</h4>
+                            <p>Add an extra layer of security to your account</p>
+                        </div>
+                        <div class="toggle-switch" onclick="toggleSetting(this)"></div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">📝 API Keys</div>
+                    <p style="margin-bottom: 1rem; color: var(--text-secondary);">Manage your API keys for backend integration</p>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Key Name</th>
+                                    <th>Key</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Primary API Key</td>
+                                    <td style="font-family: monospace; font-size: 0.75rem;">sk_live_••••••••••••••••</td>
+                                    <td>2024-01-15</td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">Regenerate</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button class="btn btn-primary" style="margin-top: 1rem;" onclick="generateNewKey()">+ Generate New Key</button>
+                </div>
+            </section>
+
+            <!-- ── BACKUP ── -->
+            <section id="backup" class="tab-content">
+                <h1 style="margin-bottom: 2rem;">Backup & Restore</h1>
+                
+                <div class="settings-section">
+                    <div class="settings-section-title">💾 Database Backups</div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <button class="btn btn-primary" onclick="backupDatabase()">Create Backup Now</button>
+                        <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">Last backup: 2 hours ago</p>
+                    </div>
+
+                    <h4 style="margin-bottom: 1rem;">Previous Backups</h4>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Size</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2024-05-04 10:30</td>
+                                    <td>245 MB</td>
+                                    <td><span class="badge success">Completed</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">Download</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-04 08:15</td>
+                                    <td>243 MB</td>
+                                    <td><span class="badge success">Completed</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.5rem 0.75rem;">Download</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">🔄 Auto Backup</div>
+                    
+                    <div class="setting-row">
+                        <div class="setting-left">
+                            <h4>Enable Auto Backup</h4>
+                            <p>Automatically backup database daily</p>
+                        </div>
+                        <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Backup Schedule</label>
+                        <select id="backupSchedule">
+                            <option>Daily at 2:00 AM</option>
+                            <option>Every 6 hours</option>
+                            <option>Weekly on Sunday</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveSettings('backup')">Save Backup Settings</button>
+                </div>
+            </section>
+
+            <!-- ── LOGS ── -->
+            <section id="logs" class="tab-content">
+                <h1 style="margin-bottom: 1.5rem;">System Logs</h1>
+                
+                <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem;">
+                    <button class="btn btn-secondary" onclick="filterLogs('all')">All</button>
+                    <button class="btn btn-secondary" onclick="filterLogs('error')">🔴 Errors</button>
+                    <button class="btn btn-secondary" onclick="filterLogs('warning')">⚠️ Warnings</button>
+                    <button class="btn btn-secondary" onclick="filterLogs('info')">ℹ️ Info</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Type</th>
+                                <th>Message</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2024-05-04 14:32:10</td>
+                                <td><span class="badge success">Info</span></td>
+                                <td>Admin user logged in</td>
+                                <td>admin@example.com</td>
+                            </tr>
+                            <tr>
+                                <td>2024-05-04 14:25:45</td>
+                                <td><span class="badge warning">Warning</span></td>
+                                <td>Multiple login attempts detected</td>
+                                <td>System</td>
+                            </tr>
+                            <tr>
+                                <td>2024-05-04 14:10:22</td>
+                                <td><span class="badge success">Info</span></td>
+                                <td>Database backup completed</td>
+                                <td>System</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New User</h2>
+                <button class="modal-close" onclick="closeModal('userModal')">&times;</button>
+            </div>
+            <form onsubmit="handleAddUser(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select required>
+                        <option>User</option>
+                        <option>Admin</option>
+                        <option>Developer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('userModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="contentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Content</h2>
+                <button class="modal-close" onclick="closeModal('contentModal')">&times;</button>
+            </div>
+            <form onsubmit="handleAddContent(event)">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" required>
+                </div>
+                <div class="form-group">
+                    <label>Content</label>
+                    <textarea required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select required>
+                        <option>Education</option>
+                        <option>Technology</option>
+                        <option>Business</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('contentModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ── TAB NAVIGATION ──
+        document.querySelectorAll('.menu-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                const tabId = link.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // ── MODAL FUNCTIONS ──
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // ── FORM HANDLERS ──
+        function handleAddUser(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            // Send to backend
+            fetch('/api/users/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.fromEntries(formData))
+            })
+            .then(res => res.json())
+            .then(data => {
+                showNotification('User added successfully', 'success');
+                closeModal('userModal');
+                location.reload();
+            })
+            .catch(err => showNotification('Error adding user', 'error'));
+        }
+
+        function handleAddContent(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            fetch('/api/content/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.fromEntries(formData))
+            })
+            .then(res => res.json())
+            .then(data => {
+                showNotification('Content created successfully', 'success');
+                closeModal('contentModal');
+                location.reload();
+            })
+            .catch(err => showNotification('Error creating content', 'error'));
+        }
+
+        // ── SETTINGS HANDLERS ──
+        function saveSettings(section) {
+            let data = {};
+            
+            if (section === 'general') {
+                data = {
+                    siteName: document.getElementById('siteName').value,
+                    siteUrl: document.getElementById('siteUrl').value,
+                    supportEmail: document.getElementById('supportEmail').value,
+                    siteDescription: document.getElementById('siteDescription').value
+                };
+            } else if (section === 'email') {
+                data = {
+                    smtpHost: document.getElementById('smtpHost').value,
+                    smtpPort: document.getElementById('smtpPort').value,
+                    smtpUser: document.getElementById('smtpUser').value,
+                    smtpPass: document.getElementById('smtpPass').value
+                };
+            } else if (section === 'appearance') {
+                data = {
+                    theme: document.getElementById('theme').value,
+                    primaryColor: document.getElementById('primaryColor').value
+                };
+            }
+
+            fetch('/api/settings/' + section, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(data => showNotification('Settings saved successfully', 'success'))
+            .catch(err => showNotification('Error saving settings', 'error'));
+        }
+
+        function updatePassword() {
+            const current = document.getElementById('currentPass').value;
+            const newPass = document.getElementById('newPass').value;
+            const confirm = document.getElementById('confirmPass').value;
+
+            if (newPass !== confirm) {
+                showNotification('Passwords do not match', 'error');
+                return;
+            }
+
+            fetch('/api/security/password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword: current, newPassword: newPass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                showNotification('Password updated successfully', 'success');
+                document.getElementById('currentPass').value = '';
+                document.getElementById('newPass').value = '';
+                document.getElementById('confirmPass').value = '';
+            })
+            .catch(err => showNotification('Error updating password', 'error'));
+        }
+
+        function backupDatabase() {
+            fetch('/api/backup/create', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => showNotification('Backup created successfully', 'success'))
+            .catch(err => showNotification('Error creating backup', 'error'));
+        }
+
+        function generateNewKey() {
+            fetch('/api/security/generate-key', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                showNotification('New API key generated', 'success');
+                location.reload();
+            })
+            .catch(err => showNotification('Error generating key', 'error'));
+        }
+
+        // ── TOGGLE SWITCH ──
+        function toggleSetting(elem) {
+            elem.classList.toggle('active');
+        }
+
+        // ── FILTER LOGS ──
+        function filterLogs(type) {
+            fetch('/api/logs?type=' + type)
+            .then(res => res.json())
+            .then(data => {
+                console.log('Filtered logs:', data);
+                // Update table with filtered logs
+            });
+        }
+
+        // ── NOTIFICATIONS ──
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // ── API FETCH HELPER ──
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+            
+            try {
+                const response = await fetch(`/api${endpoint}`, options);
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                showNotification('API Error: ' + error.message, 'error');
+                throw error;
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            console.log('Admin panel loaded');
+            // Fetch dashboard data
+            apiCall('/dashboard/stats').then(data => {
+                console.log('Dashboard stats:', data);
+            });
+        });
+    </script>
+</body>
+</html>
