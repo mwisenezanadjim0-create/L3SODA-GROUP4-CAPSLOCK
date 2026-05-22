@@ -1,0 +1,18 @@
+{
+  "name": "dodos-car-website",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "start:sacha": "node sacha-backend.js",
+    "migrate:inventory": "node migrate-inventory-sqlite-to-mongo.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.17.0",
+    "nodemailer": "^8.0.7",
+    "sharp": "^0.34.5"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

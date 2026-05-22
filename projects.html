@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mugisha Samy | Frontend Developer</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0a0a0a;
+            --secondary: #141414;
+            --accent: #00ff88;
+            --accent-dim: #00ff8833;
+            --accent-glow: rgba(0, 255, 136, 0.15);
+            --text: #ffffff;
+            --text-muted: #888888;
+            --border: #2a2a2a;
+            --gradient-1: #00ff88;
+            --gradient-2: #00d9ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* Noise Overlay */
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .nav.scrolled {
+            padding: 1rem 3rem;
+            background: rgba(10, 10, 10, 0.95);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            position: relative;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--accent), var(--gradient-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 10%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle at center, var(--accent-dim) 0%, transparent 70%);
+            opacity: 0.3;
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.5; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+        }
+
+        .hero-label {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-title .highlight {
+            background: linear-gradient(135deg, var(--accent), var(--gradient-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            line-height: 1.8;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--gradient-2));
+            color: var(--primary);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Floating Elements */
+        .floating-tag {
+            position: absolute;
+            padding: 0.75rem 1.5rem;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+
+        .tag-1 { top: 20%; right: 15%; animation-delay: 0s; }
+        .tag-2 { top: 40%; right: 10%; animation-delay: 2s; }
+        .tag-3 { bottom: 30%; right: 20%; animation-delay: 4s; }
+
+        /* Sections */
+        section {
+            padding: 8rem 10%;
+            position: relative;
+        }
+
+        .section-header {
+            margin-bottom: 4rem;
+        }
+
+        .section-label {
+            font-size: 0.9rem;
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        /* About Section */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about-text {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 2;
+        }
+
+        .about-text p {
+            margin-bottom: 1.5rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .stat-item {
+            padding: 2rem;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, var(--accent-glow) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-item:hover::before {
+            opacity: 1;
+        }
+
+        .stat-item:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--gradient-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Programming Languages Section */
+        .languages-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .language-card {
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .language-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--gradient-2));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .language-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .language-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.1);
+        }
+
+        .language-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .language-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .language-level {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Skills Section */
+        .skills-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .skill-card {
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skill-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(0, 255, 136, 0.03) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .skill-card:hover::before {
+            opacity: 1;
+        }
+
+        .skill-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+
+        .skill-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+        }
+
+        .skill-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .skill-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        .skill-level {
+            margin-top: 1.5rem;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .skill-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--gradient-2));
+            border-radius: 2px;
+            transition: width 1s ease;
+        }
+
+        /* Projects Section */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .project-card {
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .project-image {
+            width: 100%;
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .project-image.html-css { background: linear-gradient(135deg, #e34c26 0%, #264de4 100%); }
+        .project-image.javascript { background: linear-gradient(135deg, #f7df1e 0%, #000000 100%); }
+        .project-image.vue { background: linear-gradient(135deg, #42b883 0%, #35495e 100%); }
+        .project-image.fullstack { background: linear-gradient(135deg, #00ff88 0%, #00d9ff 100%); }
+
+        .project-content {
+            padding: 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            flex: 1;
+        }
+
+        .project-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .project-tag {
+            padding: 0.4rem 1rem;
+            background: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .project-tag:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .project-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .project-link {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .project-link.primary {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .project-link.primary:hover {
+            background: var(--gradient-2);
+        }
+
+        .project-link.secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .project-link.secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Contact Section */
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .contact-info h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-info p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .contact-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .contact-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        .contact-link:hover {
+            border-color: var(--accent);
+            transform: translateX(10px);
+        }
+
+        .contact-link-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+
+        .contact-form {
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 10%;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        /* Cursor Effect */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+            mix-blend-mode: difference;
+        }
+
+        .cursor-follower {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-dim);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.3s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .nav {
+                padding: 1rem 5%;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+
+            section {
+                padding: 5rem 5%;
+            }
+
+            .about-grid,
+            .contact-container {
+                grid-template-columns: 1fr;
+            }
+
+            .floating-tag {
+                display: none;
+            }
+
+            .cursor, .cursor-follower {
+                display: none;
+            }
+        }
+
+        /* Loading Animation */
+        .fade-enter-active,
+        .fade-leave-active {
+            transition: opacity 0.5s ease;
+        }
+
+        .fade-enter-from,
+        .fade-leave-to {
+            opacity: 0;
+        }
+
+        .slide-up-enter-active {
+            transition: all 0.8s ease;
+        }
+
+        .slide-up-enter-from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="noise"></div>
+        
+        <!-- Custom Cursor -->
+        <div class="cursor" :style="cursorStyle" v-if="!isMobile"></div>
+        <div class="cursor-follower" :style="followerStyle" v-if="!isMobile"></div>
+
+        <!-- Navigation -->
+        <nav class="nav" :class="{ scrolled: scrolled }">
+            <div class="logo font-display" @click="scrollTo('hero')">MS.</div>
+            <ul class="nav-links">
+                <li><a @click.prevent="scrollTo('about')" href="#about">About</a></li>
+                <li><a @click.prevent="scrollTo('languages')" href="#languages">Stack</a></li>
+                <li><a @click.prevent="scrollTo('skills')" href="#skills">Skills</a></li>
+                <li><a @click.prevent="scrollTo('projects')" href="#projects">Projects</a></li>
+                <li><a @click.prevent="scrollTo('contact')" href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero" id="hero" ref="hero">
+            <div class="hero-bg"></div>
+            <div class="hero-content">
+                <div class="hero-label">Frontend Developer</div>
+                <h1 class="hero-title font-display">
+                    Hi, I'm <span class="highlight">Mugisha Samy</span><br>
+                    I Build Digital<br>Experiences
+                </h1>
+                <p class="hero-subtitle">
+                    A passionate Vue.js specialist crafting elite web experiences. 
+                    Mastering HTML, CSS, JavaScript, Python, and Node.js to build 
+                    full-stack applications that perform.
+                </p>
+                <div class="hero-cta">
+                    <a href="#projects" class="btn btn-primary" @click.prevent="scrollTo('projects')">
+                        View My Work
+                        <span>→</span>
+                    </a>
+                    <a href="#contact" class="btn btn-secondary" @click.prevent="scrollTo('contact')">
+                        Get In Touch
+                    </a>
+                </div>
+            </div>
+            
+            <div class="floating-tag tag-1">Vue.js Expert</div>
+            <div class="floating-tag tag-2">5 Languages</div>
+            <div class="floating-tag tag-3">Full Stack</div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" ref="about">
+            <div class="section-header">
+                <span class="section-label">About Me</span>
+                <h2 class="section-title font-display">Driven by Code,<br>Fueled by Creativity</h2>
+            </div>
+            <div class="about-grid">
+                <div class="about-text">
+                    <p>
+                        I'm Mugisha Samy (legally Ninziza Mugisha Samuel), a dedicated frontend developer 
+                        with a sharp focus on the Vue.js ecosystem. My technical arsenal includes core web 
+                        technologies (HTML, CSS, JavaScript) plus backend power (Python, Node.js).
+                    </p>
+                    <p>
+                        I specialize in building reactive, component-driven architectures that scale. From 
+                        semantic HTML to complex Vue 3 Composition API patterns, I create applications that 
+                        are both beautiful under the hood and pixel-perfect on screen.
+                    </p>
+                    <p>
+                        Currently seeking opportunities to contribute to innovative projects that push the 
+                        boundaries of web technology.
+                    </p>
+                </div>
+                <div class="stats">
+                    <div class="stat-item" v-for="(stat, index) in stats" :key="index">
+                        <span class="stat-number font-display">{{ stat.number }}</span>
+                        <span class="stat-label">{{ stat.label }}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Programming Languages Section -->
+        <section id="languages" ref="languages">
+            <div class="section-header">
+                <span class="section-label">Tech Stack</span>
+                <h2 class="section-title font-display">Programming Languages</h2>
+            </div>
+            
+            <div class="languages-container">
+                <div class="language-card" v-for="(lang, index) in programmingLanguages" :key="index">
+                    <span class="language-icon">{{ lang.icon }}</span>
+                    <h3 class="language-name">{{ lang.name }}</h3>
+                    <p class="language-level">{{ lang.level }}</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section id="skills" ref="skills">
+            <div class="section-header">
+                <span class="section-label">Expertise</span>
+                <h2 class="section-title font-display">Technical Arsenal</h2>
+            </div>
+            
+            <div class="skills-container">
+                <div class="skill-card" v-for="(skill, index) in skills" :key="index">
+                    <div class="skill-icon">{{ skill.icon }}</div>
+                    <h3 class="skill-name">{{ skill.name }}</h3>
+                    <p class="skill-desc">{{ skill.description }}</p>
+                    <div class="skill-level">
+                        <div class="skill-progress" :style="{ width: skill.level + '%' }"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects" ref="projects">
+            <div class="section-header">
+                <span class="section-label">Portfolio</span>
+                <h2 class="section-title font-display">Featured Projects</h2>
+            </div>
+            <div class="projects-grid">
+                <div class="project-card" v-for="(project, index) in projects" :key="index">
+                    <div class="project-image" :class="project.class">
+                        {{ project.emoji }}
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">{{ project.title }}</h3>
+                        <p class="project-desc">{{ project.description }}</p>
+                        <div class="project-tags">
+                            <span class="project-tag" v-for="(tag, i) in project.tags" :key="i">{{ tag }}</span>
+                        </div>
+                        <div class="project-links">
+                            <a :href="project.demo" class="project-link primary">Live Demo</a>
+                            <a :href="project.github" class="project-link secondary">GitHub</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" ref="contact">
+            <div class="section-header">
+                <span class="section-label">Contact</span>
+                <h2 class="section-title font-display">Let's Create Something<br>Extraordinary</h2>
+            </div>
+            <div class="contact-container">
+                <div class="contact-info">
+                    <h3>Ready to start a project?</h3>
+                    <p>
+                        I'm currently available for freelance work and open to full-time opportunities. 
+                        If you have a project that needs a Vue.js specialist with full-stack capabilities, 
+                        let's talk.
+                    </p>
+                    <div class="contact-links">
+                        <a href="mailto:mugishasamy@gmail.com" class="contact-link">
+                            <div class="contact-link-icon">✉</div>
+                            <div>
+                                <div style="font-weight: 600;">Email</div>
+                                <div style="font-size: 0.9rem; color: var(--text-muted);">mugishasamy@gmail.com</div>
+                            </div>
+                        </a>
+                        <a href="#" class="contact-link">
+                            <div class="contact-link-icon">in</div>
+                            <div>
+                                <div style="font-weight: 600;">LinkedIn</div>
+                                <div style="font-size: 0.9rem; color: var(--text-muted);">/in/mugishasamy</div>
+                            </div>
+                        </a>
+                        <a href="#" class="contact-link">
+                            <div class="contact-link-icon">gh</div>
+                            <div>
+                                <div style="font-weight: 600;">GitHub</div>
+                                <div style="font-size: 0.9rem; color: var(--text-muted);">@mugishasamy</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form @submit.prevent="submitForm">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" v-model="form.name" placeholder="Your name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" v-model="form.email" placeholder="your@email.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Message</label>
+                            <textarea v-model="form.message" placeholder="Tell me about your project..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-content">
+                <div class="font-display" style="font-weight: 700; font-size: 1.2rem; background: linear-gradient(135deg, var(--accent), var(--gradient-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MS.</div>
+                <div class="footer-links">
+                    <a href="#about" @click.prevent="scrollTo('about')">About</a>
+                    <a href="#languages" @click.prevent="scrollTo('languages')">Stack</a>
+                    <a href="#skills" @click.prevent="scrollTo('skills')">Skills</a>
+                    <a href="#projects" @click.prevent="scrollTo('projects')">Projects</a>
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.9rem;">
+                    © 2026 Mugisha Samy. All rights reserved.
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, onUnmounted, computed } = Vue;
+
+        createApp({
+            setup() {
+                const scrolled = ref(false);
+                const isMobile = ref(false);
+                const mouseX = ref(0);
+                const mouseY = ref(0);
+                
+                const form = ref({
+                    name: '',
+                    email: '',
+                    message: ''
+                });
+
+                const stats = ref([
+                    { number: '3+', label: 'Years Experience' },
+                    { number: '5', label: 'Languages Mastered' },
+                    { number: '20+', label: 'Projects Completed' },
+                    { number: '100%', label: 'Commitment' }
+                ]);
+
+                const programmingLanguages = ref([
+                    { icon: '🌐', name: 'HTML5', level: 'Semantic Markup' },
+                    { icon: '🎨', name: 'CSS3', level: 'Flexbox, Grid, Animations' },
+                    { icon: '⚡', name: 'JavaScript', level: 'ES6+, DOM, Async' },
+                    { icon: '🐍', name: 'Python', level: 'Scripting, Automation' },
+                    { icon: '🟢', name: 'Node.js', level: 'Backend, APIs, Express' }
+                ]);
+
+                const skills = ref([
+                    {
+                        icon: '⚡',
+                        name: 'Vue.js Ecosystem',
+                        description: 'Deep expertise in Vue 3, Composition API, Pinia, Vue Router, and Nuxt.js. Building reactive, component-driven architectures.',
+                        level: 95
+                    },
+                    {
+                        icon: '🎨',
+                        name: 'Modern Frontend',
+                        description: 'Advanced proficiency in responsive design, CSS Grid/Flexbox, animations, and modern build tools. Creating pixel-perfect interfaces.',
+                        level: 90
+                    },
+                    {
+                        icon: '🚀',
+                        name: 'Full Stack Integration',
+                        description: 'Connecting frontend with Node.js/Python backends. RESTful APIs, authentication, database integration, and deployment.',
+                        level: 85
+                    }
+                ]);
+
+                const projects = ref([
+                    {
+                        title: 'Kanban Task Manager',
+                        description: 'A Trello-like project management app with drag-and-drop functionality, real-time updates, and team collaboration features. Built with Vue 3 and Node.js backend.',
+                        tags: ['Vue 3', 'Node.js', 'MongoDB', 'Socket.io'],
+                        class: 'vue',
+                        emoji: '📋',
+                        demo: '#',
+                        github: '#'
+                    },
+                    {
+                        title: 'E-Commerce Dashboard',
+                        description: 'Full-stack analytics dashboard for online retailers featuring real-time data visualization, inventory management, and sales reporting with Python data processing.',
+                        tags: ['Vue 3', 'Python', 'D3.js', 'FastAPI'],
+                        class: 'fullstack',
+                        emoji: '📊',
+                        demo: '#',
+                        github: '#'
+                    },
+                    {
+                        title: 'Weather PWA',
+                        description: 'Progressive Web App providing real-time weather data, location-based forecasts, and offline functionality using service workers and local storage.',
+                        tags: ['HTML5', 'CSS3', 'JavaScript', 'API'],
+                        class: 'html-css',
+                        emoji: '🌤',
+                        demo: '#',
+                        github: '#'
+                    },
+                    {
+                        title: 'Real-time Chat App',
+                        description: 'WhatsApp-like messaging application with end-to-end encryption, file sharing, and voice messages. Features real-time messaging via WebSockets.',
+                        tags: ['Vue.js', 'Node.js', 'Express', 'WebSocket'],
+                        class: 'javascript',
+                        emoji: '💬',
+                        demo: '#',
+                        github: '#'
+                    },
+                    {
+                        title: 'Portfolio CMS',
+                        description: 'Headless CMS built with Python Flask and Vue.js frontend. Features markdown editing, image optimization, and SEO automation for content creators.',
+                        tags: ['Python', 'Vue.js', 'Flask', 'PostgreSQL'],
+                        class: 'fullstack',
+                        emoji: '📝',
+                        demo: '#',
+                        github: '#'
+                    },
+                    {
+                        title: 'Crypto Tracker',
+                        description: 'Cryptocurrency portfolio tracker with real-time price updates via WebSocket, historical charts, and profit/loss calculations using Binance API.',
+                        tags: ['JavaScript', 'Vue 3', 'Chart.js', 'API'],
+                        class: 'javascript',
+                        emoji: '₿',
+                        demo: '#',
+                        github: '#'
+                    }
+                ]);
+
+                const cursorStyle = computed(() => ({
+                    transform: `translate(${mouseX.value - 10}px, ${mouseY.value - 10}px)`
+                }));
+
+                const followerStyle = computed(() => ({
+                    transform: `translate(${mouseX.value - 20}px, ${mouseY.value - 20}px)`
+                }));
+
+                const handleScroll = () => {
+                    scrolled.value = window.scrollY > 50;
+                };
+
+                const handleMouseMove = (e) => {
+                    mouseX.value = e.clientX;
+                    mouseY.value = e.clientY;
+                };
+
+                const scrollTo = (sectionId) => {
+                    const element = document.getElementById(sectionId);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                };
+
+                const submitForm = () => {
+                    alert(`Thanks for your message, ${form.value.name}! I'll get back to you soon.`);
+                    form.value = { name: '', email: '', message: '' };
+                };
+
+                onMounted(() => {
+                    window.addEventListener('scroll', handleScroll);
+                    window.addEventListener('mousemove', handleMouseMove);
+                    isMobile.value = window.matchMedia('(pointer: coarse)').matches;
+                    
+                    // Intersection Observer for animations
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                entry.target.style.opacity = '1';
+                                entry.target.style.transform = 'translateY(0)';
+                            }
+                        });
+                    }, { threshold: 0.1 });
+
+                    document.querySelectorAll('section').forEach(section => {
+                        section.style.opacity = '0';
+                        section.style.transform = 'translateY(30px)';
+                        section.style.transition = 'all 0.8s ease';
+                        observer.observe(section);
+                    });
+                });
+
+                onUnmounted(() => {
+                    window.removeEventListener('scroll', handleScroll);
+                    window.removeEventListener('mousemove', handleMouseMove);
+                });
+
+                return {
+                    scrolled,
+                    isMobile,
+                    cursorStyle,
+                    followerStyle,
+                    form,
+                    stats,
+                    programmingLanguages,
+                    skills,
+                    projects,
+                    scrollTo,
+                    submitForm
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

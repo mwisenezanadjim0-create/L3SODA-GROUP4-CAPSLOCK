@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funny Prank</title>
+  <style>
+    body {
+      margin:0px;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: wheat;
+      overflow: hidden;
+    }
+
+    #container {
+      text-align: center;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      margin: 0;
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      position: absolute;
+      top: 0;
+    }
+
+    #yesBtn {
+      background: green;
+      color: white;
+      left: 50%;
+      transform: translateX(-140px);
+      top: 250px;
+      z-index: 2;
+    }
+
+    #noBtn {
+      background: red;
+      color: white;
+      left: 50%;
+      transform: translateX(20px);
+      top: 250px;
+      z-index: 1;
+    }
+
+    #funnyScreen {
+      display: none;
+      font-size: 40px;
+      color: purple;
+    }
+    #question {
+      font-size: 60px;
+      margin-bottom: 100px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="container">
+  <h1 id="question">are you lesbian?</h1>
+  <button id="yesBtn">Yes</button>
+  <button id="noBtn">No</button>
+  <div id="funnyScreen">😂 why are u lesbian 😂</div>
+</div>
+
+<script>
+  const noBtn = document.getElementById("noBtn");
+  const yesBtn = document.getElementById("yesBtn");
+  const question = document.getElementById("question");
+  const funnyScreen = document.getElementById("funnyScreen");
+
+  noBtn.addEventListener("mouseover", () => {
+    // Keep movement bounded to the viewport and below the question text area.
+    const btnWidth = noBtn.offsetWidth || 100;
+    const btnHeight = noBtn.offsetHeight || 50;
+
+    const x = Math.random() * (window.innerWidth - btnWidth);
+    const y = 200 + Math.random() * (window.innerHeight - 250 - btnHeight);
+
+    noBtn.style.left = `${x}px`;
+    noBtn.style.top = `${y}px`;
+  });
+
+  yesBtn.addEventListener("click", () => {
+    question.style.display = "none";
+    yesBtn.style.display = "none";
+    noBtn.style.display = "none";
+    funnyScreen.style.display = "block";
+    document.body.style.background = "yellow";
+  });
+</script>
+
+</body>
+</html>

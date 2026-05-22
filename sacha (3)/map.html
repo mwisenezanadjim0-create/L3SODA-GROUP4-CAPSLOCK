@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Us | Sacha's Taste</title>
+    <meta name="description" content="Find Sacha's Taste on the map and see how close you are to authentic African fast food in Kigali, Rwanda.">
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <style>
+        :root {
+            --primary: #FF8A00;
+            --primary-glow: rgba(255, 138, 0, 0.4);
+            --bg-dark: #0a0a0a;
+            --bg-card: rgba(18, 18, 18, 0.75);
+            --border-glow: rgba(255, 138, 0, 0.25);
+            --text-light: #ffffff;
+            --text-muted: #888888;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient Noise Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.04;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* Floating Layout Overlay */
+        .page-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .interactive-elements {
+            pointer-events: auto;
+        }
+
+        /* Back Button styling */
+        .back-btn {
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            padding: 0.9rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-decoration: none;
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            border-color: var(--primary);
+            box-shadow: 0 10px 35px var(--primary-glow);
+            transform: translateY(-2px);
+            color: var(--primary);
+        }
+
+        .back-btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover i {
+            transform: translateX(-4px);
+        }
+
+        /* Glass Sidebar Panel */
+        .map-sidebar {
+            width: 400px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 30px;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.8);
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+            margin-top: 5.5rem; /* clear back btn space */
+            height: calc(100% - 5.5rem);
+            max-height: 750px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 1.5rem;
+        }
+
+        .brand-logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .brand-text h2 {
+            font-family: 'Fraunces', serif;
+            font-weight: 900;
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+            font-style: italic;
+        }
+
+        .brand-text p {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .panel-section h3 {
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--primary);
+            margin-bottom: 0.8rem;
+        }
+
+        .panel-section p {
+            font-size: 0.95rem;
+            color: #ccc;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .status-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            padding: 1.2rem;
+            border-left: 4px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .status-box .status-title {
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        .status-box .status-hours {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .locate-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        /* Pulsing Orange Locate Button */
+        .btn-orange {
+            width: 100%;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 16px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 10px 30px var(--primary-glow);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+        }
+
+        .btn-orange:hover {
+            background: #e67c00;
+            box-shadow: 0 12px 35px rgba(255, 138, 0, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-orange:active {
+            transform: translateY(0);
+        }
+
+        .btn-orange i {
+            font-size: 1.1rem;
+        }
+
+        .btn-orange.locating {
+            background: #444;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn-orange.locating i {
+            animation: spin 1s infinite linear;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Interactive Info/Details Section */
+        .info-card {
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: all 0.4s ease;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .info-row:last-child {
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .info-row .label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+        }
+
+        .info-row .value {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #fff;
+            text-align: right;
+        }
+
+        .info-row .value.highlight {
+            color: var(--primary);
+            font-size: 1.05rem;
+        }
+
+        .helper-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* Contact links in sidebar */
+        .contact-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 0.9rem 1.2rem;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .contact-item i {
+            font-size: 1.3rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .contact-item:hover i {
+            transform: scale(1.1);
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .contact-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .contact-val {
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: color 0.3s ease;
+        }
+
+        /* Specific contact color highlights on hover */
+        .contact-item:hover .contact-val {
+            color: var(--primary);
+        }
+
+        .whatsapp-item:hover {
+            border-color: rgba(40, 167, 69, 0.35);
+            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.08);
+        }
+
+        .whatsapp-item:hover i {
+            background: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+        }
+
+        .whatsapp-item:hover .contact-val {
+            color: #28a745;
+        }
+
+        .instagram-item:hover {
+            border-color: rgba(225, 48, 108, 0.35);
+            box-shadow: 0 5px 20px rgba(225, 48, 108, 0.08);
+        }
+
+        .instagram-item:hover i {
+            background: rgba(225, 48, 108, 0.15);
+            color: #e1306c;
+        }
+
+        .instagram-item:hover .contact-val {
+            color: #e1306c;
+        }
+
+        /* Leaflet Controls Overrides */
+        .leaflet-bar {
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+            border-radius: 12px !important;
+            overflow: hidden;
+        }
+
+        .leaflet-bar a {
+            background-color: rgba(10, 10, 10, 0.85) !important;
+            color: #fff !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+            transition: all 0.3s;
+        }
+
+        .leaflet-bar a:hover {
+            background-color: var(--primary) !important;
+            color: #fff !important;
+        }
+
+        .leaflet-touch .leaflet-bar a {
+            width: 38px;
+            height: 38px;
+            line-height: 38px;
+        }
+
+        /* Dark popup theme */
+        .leaflet-popup-content-wrapper {
+            background: #111 !important;
+            color: #fff !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(255, 138, 0, 0.3) !important;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6) !important;
+            padding: 0.5rem !important;
+        }
+
+        .leaflet-popup-tip {
+            background: #111 !important;
+            border: 1px solid rgba(255, 138, 0, 0.3) !important;
+        }
+
+        .map-popup {
+            padding: 0.5rem;
+            min-width: 180px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .map-popup img {
+            height: 36px;
+            margin-bottom: 0.2rem;
+        }
+
+        .map-popup h4 {
+            font-family: 'Fraunces', serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #fff;
+            font-style: italic;
+        }
+
+        .map-popup p {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .map-popup span.badge {
+            background: rgba(255, 138, 0, 0.15);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.3rem;
+        }
+
+        /* Animated Pin Effect */
+        .restaurant-marker-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pulse-pin {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 3px solid #fff;
+            position: relative;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .pulse-ring {
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            height: 50px;
+            width: 50px;
+            position: absolute;
+            top: -18px;
+            left: -18px;
+            animation: pulseRing 1.8s ease-out infinite;
+            opacity: 0;
+        }
+
+        .user-marker-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pulse-pin-user {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00ffff;
+            border: 3px solid #fff;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .pulse-ring-user {
+            border: 3px solid #00ffff;
+            border-radius: 50%;
+            height: 48px;
+            width: 48px;
+            position: absolute;
+            top: -18px;
+            left: -18px;
+            animation: pulseRing 1.8s ease-out infinite;
+            opacity: 0;
+            animation-delay: 0.4s;
+        }
+
+        @keyframes pulseRing {
+            0% { transform: scale(0.1); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: scale(1.2); opacity: 0; }
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .page-overlay {
+                flex-direction: column;
+                padding: 1rem;
+                justify-content: flex-end;
+            }
+
+            .back-btn {
+                position: fixed;
+                top: 1rem;
+                left: 1rem;
+                padding: 0.7rem 1.2rem;
+                font-size: 0.75rem;
+            }
+
+            .map-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 45vh;
+                margin-top: 0;
+                padding: 1.5rem;
+                border-radius: 20px;
+                gap: 1.2rem;
+            }
+
+            .sidebar-brand, .panel-section:first-of-type {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Back to Main Page Button -->
+    <a href="index.html" class="back-btn interactive-elements">
+        <i class="fas fa-arrow-left"></i>
+        <span>Back to Home</span>
+    </a>
+
+    <!-- Page overlay container for glass sidebar panel -->
+    <div class="page-overlay">
+        <div class="map-sidebar interactive-elements">
+            <div class="sidebar-brand">
+                <img src="assets/brand-logo.png" alt="Sacha's Taste" class="brand-logo">
+                <div class="brand-text">
+                    <h2>Sacha's Taste</h2>
+                    <p>Authentic African</p>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>Live Location</h3>
+                <p>Located in the heart of Kigali, we serve rich, flame-grilled goodness that keeps the fires burning. Find your way or locate yourself to see delivery range!</p>
+            </div>
+
+            <div class="status-box">
+                <span class="status-title"><i class="fas fa-clock" style="color: var(--primary); margin-right: 0.5rem;"></i> Doors are open</span>
+                <span class="status-hours">Today: 11:00 AM - 10:00 PM</span>
+            </div>
+
+            <div class="panel-section">
+                <h3>Contact & Orders</h3>
+                <div class="contact-links">
+                    <a href="tel:+250788436863" class="contact-item">
+                        <i class="fas fa-phone-alt"></i>
+                        <div class="contact-info">
+                            <span class="contact-label">Call Us</span>
+                            <span class="contact-val">+250 788 436 863</span>
+                        </div>
+                    </a>
+                    
+                    <a href="https://wa.me/250788436863" target="_blank" class="contact-item whatsapp-item">
+                        <i class="fab fa-whatsapp"></i>
+                        <div class="contact-info">
+                            <span class="contact-label">WhatsApp Chat</span>
+                            <span class="contact-val">0788436863</span>
+                        </div>
+                    </a>
+                    
+                    <a href="https://www.instagram.com/sachas_taste/" target="_blank" class="contact-item instagram-item">
+                        <i class="fab fa-instagram"></i>
+                        <div class="contact-info">
+                            <span class="contact-label">Instagram</span>
+                            <span class="contact-val">@sachas_taste</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="locate-section">
+                <button id="locateBtn" class="btn-orange">
+                    <i class="fas fa-location-arrow"></i>
+                    <span>Locate Me on Map</span>
+                </button>
+
+                <div class="info-card">
+                    <div class="info-row">
+                        <span class="label">Sacha's Location</span>
+                        <span class="value">Kigali, Rwanda</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Your Pin</span>
+                        <span id="userLocationText" class="value">Not placed yet</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Distance</span>
+                        <span id="distanceText" class="value highlight">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Rider ETA</span>
+                        <span id="etaText" class="value highlight">-</span>
+                    </div>
+                </div>
+
+                <p class="helper-text">
+                    <i class="fas fa-info-circle"></i>
+                    Tip: Geolocation blocked? Just click anywhere on the Kigali map to place your delivery pin!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map container -->
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sacha's Taste absolute location in Kigali, Rwanda
+            const sachasCoords = [-2.02, 30.11];
+            
+            // Initialize map, default focused on Kigali center
+            const map = L.map('map', {
+                zoomControl: false // disabled standard, will place customized
+            }).setView(sachasCoords, 13);
+
+            // Add clean light tiles for high visibility
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+
+            // Add standard custom-positioned zoom control
+            L.control.zoom({
+                position: 'topright'
+            }).addTo(map);
+
+            // Custom pulsing CSS marker for Sacha's Taste
+            const restaurantIcon = L.divIcon({
+                className: 'restaurant-marker-icon',
+                html: '<div class="pulse-pin"><div class="pulse-ring"></div></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            // Create marker for Sacha's Taste
+            const sachaMarker = L.marker(sachasCoords, { icon: restaurantIcon }).addTo(map);
+
+            // Build gorgeous popup
+            const popupHTML = `
+                <div class="map-popup">
+                    <img src="assets/brand-logo.png" alt="Sacha's Logo">
+                    <h4>Sacha's Taste</h4>
+                    <p><i class="fas fa-fire"></i> Flame-Grilled Street Food</p>
+                    <span class="badge">Open Now</span>
+                </div>
+            `;
+            sachaMarker.bindPopup(popupHTML).openPopup();
+
+            // Trackers for User
+            let userMarker = null;
+            let routeLine = null;
+
+            // Haversine formula to compute distance in km
+            const getDistanceKm = (coords1, coords2) => {
+                const R = 6371; // Earth's radius in km
+                const dLat = (coords2[0] - coords1[0]) * Math.PI / 180;
+                const dLon = (coords2[1] - coords1[1]) * Math.PI / 180;
+                const a = 
+                    Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(coords1[0] * Math.PI / 180) * Math.cos(coords2[0] * Math.PI / 180) * 
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            };
+
+            // Updates the card status when a location is registered
+            const updateLocationStats = (lat, lng, isGeolocated = false) => {
+                const distance = getDistanceKm(sachasCoords, [lat, lng]);
+                
+                // Show in the sidebar
+                document.getElementById('userLocationText').textContent = isGeolocated ? "My Location" : `Pin placed (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
+                document.getElementById('distanceText').textContent = `${distance.toFixed(2)} km`;
+                
+                // Estimate ETA: Average speed of standard delivery bike in Kigali traffic (approx 25km/h)
+                // Plus preparation buffers
+                const prepBuffer = 15; // 15 mins prep
+                const travelTime = (distance / 25) * 60; // in minutes
+                const totalEta = Math.round(prepBuffer + travelTime);
+                document.getElementById('etaText').textContent = `${totalEta} mins`;
+
+                // Draw path line connecting
+                if (routeLine) {
+                    map.removeLayer(routeLine);
+                }
+                
+                routeLine = L.polyline([sachasCoords, [lat, lng]], {
+                    color: '#FF8A00',
+                    weight: 3,
+                    opacity: 0.8,
+                    dashArray: '10, 10',
+                    lineCap: 'round'
+                }).addTo(map);
+
+                // Zoom out to fit both
+                const group = new L.featureGroup([sachaMarker, userMarker]);
+                map.fitBounds(group.getBounds().pad(0.35));
+            };
+
+            // Place custom user pin
+            const placeUserPin = (lat, lng, isGeolocated = false) => {
+                const userIcon = L.divIcon({
+                    className: 'user-marker-icon',
+                    html: '<div class="pulse-pin-user"><div class="pulse-ring-user"></div></div>',
+                    iconSize: [18, 18],
+                    iconAnchor: [9, 9]
+                });
+
+                if (userMarker) {
+                    userMarker.setLatLng([lat, lng]);
+                } else {
+                    userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+                }
+
+                userMarker.bindPopup(`
+                    <div style="text-align: center; font-size: 0.8rem; font-weight: 700; color: #fff; padding: 0.2rem 0.5rem;">
+                        <i class="fas fa-user-pin" style="color: #00ffff; margin-right: 0.3rem;"></i> Your Delivery Pin
+                    </div>
+                `).openPopup();
+
+                updateLocationStats(lat, lng, isGeolocated);
+            };
+
+            // Map click handler (Simulate/Place location)
+            map.on('click', (e) => {
+                const { lat, lng } = e.latlng;
+                placeUserPin(lat, lng, false);
+            });
+
+            // Geolocation function
+            const locateBtn = document.getElementById('locateBtn');
+            locateBtn.addEventListener('click', () => {
+                locateBtn.classList.add('locating');
+                locateBtn.disabled = true;
+                locateBtn.innerHTML = '<i class="fas fa-spinner"></i><span>Locating...</span>';
+
+                if (!navigator.geolocation) {
+                    alert('Geolocation is not supported by your browser. Please click on the map to set location.');
+                    locateBtn.classList.remove('locating');
+                    locateBtn.disabled = false;
+                    locateBtn.innerHTML = '<i class="fas fa-location-arrow"></i><span>Locate Me on Map</span>';
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        
+                        // Check if user is near Kigali. If not, user request "just use kigali"
+                        // means we can simulate a location in Kigali if their position is thousands of miles away!
+                        // Let's check distance to Sacha's Taste.
+                        const distance = getDistanceKm(sachasCoords, [latitude, longitude]);
+                        if (distance > 100) {
+                            // User is far outside Kigali (e.g. testing elsewhere in the world). 
+                            // Place their pin near Sacha's Taste in Kigali, Rwanda to keep the demonstration meaningful and fast!
+                            // We place it at KK 18 Ave, Kigali (e.g. -2.03, 30.09)
+                            const simulatedLat = -1.9545;
+                            const simulatedLng = 30.0886;
+                            
+                            setTimeout(() => {
+                                placeUserPin(simulatedLat, simulatedLng, true);
+                                document.getElementById('userLocationText').textContent = "Located (Kigali Sim)";
+                                locateBtn.classList.remove('locating');
+                                locateBtn.disabled = false;
+                                locateBtn.innerHTML = '<i class="fas fa-location-arrow"></i><span>Locate Me on Map</span>';
+                                alert("We detected you're outside Kigali, so we simulated a standard delivery point in Kigali center to showcase the distance and ETA calculation!");
+                            }, 1200);
+                        } else {
+                            // Close enough to Kigali, use real coordinates
+                            placeUserPin(latitude, longitude, true);
+                            locateBtn.classList.remove('locating');
+                            locateBtn.disabled = false;
+                            locateBtn.innerHTML = '<i class="fas fa-location-arrow"></i><span>Locate Me on Map</span>';
+                        }
+                    },
+                    (error) => {
+                        console.error(error);
+                        alert('Could not retrieve location. Geolocation permission denied or failed. Please click on the map to place your pin manually!');
+                        locateBtn.classList.remove('locating');
+                        locateBtn.disabled = false;
+                        locateBtn.innerHTML = '<i class="fas fa-location-arrow"></i><span>Locate Me on Map</span>';
+                    },
+                    { enableHighAccuracy: true, timeout: 8000 }
+                );
+            });
+        });
+    </script>
+</body>
+</html>

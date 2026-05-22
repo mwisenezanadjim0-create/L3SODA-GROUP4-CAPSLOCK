@@ -7,7 +7,7 @@
     <meta name="description" content="Authentic food experience in Kigali. From flame-grilled meats to perfectly spiced sides, we bring the richness of our roots to every order.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="assets/brand-logo.png">
@@ -15,9 +15,15 @@
 <body class="loading">
     <div id="preloader" class="preloader">
         <div class="preloader-content">
-            <img src="assets/brand-logo.png" alt="Logo" class="preloader-logo">
-            <h2 class="preloader-text">GROUP 4 <span>present</span></h2>
-            <p class="preloader-director">DIRECTOR <span>BONCOEUR</span></p>
+            <div class="preloader-mark">
+                <span class="preloader-ring"></span>
+                <img src="assets/brand-logo.png" alt="Sacha's Taste Logo" class="preloader-logo">
+            </div>
+            <p class="preloader-kicker">Authentic African Fast Food</p>
+            <h2 class="preloader-text">SACHA'S TASTE <span>is firing up</span></h2>
+            <div class="preloader-progress" aria-hidden="true">
+                <span></span>
+            </div>
         </div>
     </div>
     <header class="header">
@@ -28,9 +34,14 @@
                 </a>
             </div>
             <div class="header-actions">
-                <a href="#hero" class="btn-orange">OPENING TIMES</a>
-                <a href="#discover" class="btn-orange">FIND US</a>
-                <a href="#menu" class="btn-white">ORDER NOW</a>
+                <a href="opening.html" class="btn-orange header-order">OPENING TIMES</a>
+                <a href="map.html" class="btn-orange header-order">FIND US</a>
+                <a href="#menu" class="btn-orange header-order">ORDER NOW</a>
+
+                <button class="cart-btn" id="cartBtn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">0</span>
+                </button>
                 <button class="burger-btn" id="burgerBtn" aria-label="Menu">
                     <span></span>
                     <span></span>
@@ -38,6 +49,78 @@
             </div>
         </div>
     </header>
+
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>YOUR CART</h3>
+            <button class="cart-close" id="cartClose">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItemsList">
+            <!-- Items will be injected here -->
+            <p class="empty-msg">Your cart is empty</p>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>TOTAL:</span>
+                <span id="cartTotalValue">0 RWF</span>
+            </div>
+            <button class="checkout-btn" id="checkoutBtn">CHECKOUT NOW</button>
+        </div>
+    </div>
+
+    <div class="order-success" id="orderSuccess">
+        <div class="success-content">
+            <button class="success-close" id="successClose">&times;</button>
+            <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+            <h2>ORDER RECEIVED!</h2>
+            <p>Your delicious meal is being prepared with soul.</p>
+            <div class="success-image-wrap">
+                <img src="assets/delivery service.jpg" alt="Delivery Service" class="success-image">
+            </div>
+            <p class="success-footer">Our rider will be with you shortly.</p>
+            <button class="btn-orange" id="successDone">GREAT!</button>
+        </div>
+    </div>
+
+    <div class="delivery-modal" id="deliveryModal" aria-hidden="true">
+        <div class="delivery-modal-content">
+            <button class="delivery-modal-close" id="deliveryModalClose" aria-label="Close">&times;</button>
+
+            <div class="delivery-modal-header">
+                <div class="delivery-modal-icon"><i class="fas fa-truck"></i></div>
+                <h2>Confirm delivery</h2>
+                <p>Enter the details of the person who will receive the food.</p>
+            </div>
+
+            <form class="delivery-form" id="deliveryForm">
+                <div class="delivery-form-grid">
+                    <div class="field">
+                        <label for="customerName">Name</label>
+                        <input id="customerName" type="text" placeholder="e.g. John Doe" autocomplete="name" />
+                    </div>
+
+                    <div class="field">
+                        <label for="customerPhone">Phone number</label>
+                        <input id="customerPhone" type="tel" placeholder="e.g. +2507XXXXXXXX" autocomplete="tel" />
+                    </div>
+
+                    <div class="field field-full">
+                        <label for="deliveryAddress">Location / delivery address</label>
+                        <input id="deliveryAddress" type="text" placeholder="e.g. KK 123 street, near ..." />
+                    </div>
+                </div>
+
+                <div class="delivery-form-actions">
+                    <button type="button" class="btn-white" id="deliveryCancel">CANCEL</button>
+                    <button type="submit" class="btn-orange" id="deliveryConfirm">CONFIRM</button>
+                </div>
+
+                <p class="delivery-modal-note">We won’t confirm delivery unless these fields are filled.</p>
+            </form>
+        </div>
+    </div>
+
+    <div class="cart-overlay" id="cartOverlay"></div>
     <div class="nav-overlay" id="navOverlay">
         <nav class="nav-content">
             <ul class="nav-links">
@@ -45,13 +128,14 @@
                 <li><a href="#delivery">DELIVERY</a></li>
                 <li><a href="#menu">OUR MENU</a></li>
                 <li><a href="#team">MEET THE TEAM</a></li>
-                <li><a href="#discover">DISCOVER US</a></li>
+                <li><a href="opening.html">OPENING TIMES</a></li>
+                <li><a href="map.html">FIND US ON MAP</a></li>
             </ul>
             <div class="nav-footer">
                 <p>Taste the deliciousness</p>
                 <div class="nav-socials">
                     <a href="https://www.instagram.com/sachas_taste/" target="_blank"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://wa.me/250788436863" target="_blank"><i class="fab fa-whatsapp"></i></a>
                 </div>
             </div>
         </nav>
@@ -70,114 +154,378 @@
                 we bring the richness of our roots to every order.<br>
                 Fast, fresh, and full of soul!
             </p>
-            <p class="hero-tagline-quote">— this is street flavor done right.</p>
+            <p class="hero-tagline-quote">- this is street flavor done right.</p>
         </div>
     </section>
     <section class="delivery" id="delivery">
-        <div class="delivery-inner">
-            <div class="delivery-top">
-                <p class="delivery-intro-text">
-                    We saw a need for better, more authentic food experience in Kigali.<br>
-                    Inspired by vibrant markets and late-night street grills.<br>
-                    We blend traditional spices, quality ingredients, and bold techniques<br>
-                    to create meals that feel both nostalgic and new.
-                </p>
-                <img src="assets/sample_food (3).jpg" alt="Delivery" class="delivery-photo">
-            </div>
-            <div class="delivery-title-wrap">
-                <h2 class="delivery-title-thin">REAL FAST FOOD</h2>
-                <h2 class="delivery-title-bold">DELIVERY</h2>
-            </div>
-        </div>
-        <div class="best-one-inner">
-            <div class="best-one-left">
-                <div class="best-one-body">
-                    <h3 class="best-label">TASTE THE DELICIOUSNESS</h3>
-                    <p>We can confidently say that there is nobody else like us out there. We're built on total authenticity - genuine ingredients.</p>
-                    <p>This - teamed with absolute consistency that produces incredible results every time and a team of good, honest people who love to deliver a great customer experience.</p>
-                    <p>Sacha's Taste is the result of our dedication to bring happiness to you through phenomenal food, an unforgettable experience and our desire to be the absolute best at what we do.</p>
-                    <p><strong>Taste the deliciousness.</strong></p>
+        <div class="delivery-container">
+            <div class="delivery-visual">
+                <div class="delivery-title-wrap">
+                    <h2 class="delivery-title-thin">REAL FAST FOOD</h2>
+                    <h2 class="delivery-title-bold">DELIVERY</h2>
+                </div>
+                <div class="delivery-photo-wrap">
+                    <img src="assets/sample_food (3).jpg" alt="Delivery" class="delivery-photo">
+                    <div class="photo-badge">Quick & Fresh</div>
                 </div>
             </div>
-            <div class="best-one-right">
-                <h2 class="best-one-title-thin">OUR BEST ONE</h2>
-                <h2 class="best-one-title-bold">YET!</h2>
-                <img src="assets/sample_food (5).png" alt="Food Boxes" class="best-one-img">
+            
+            <div class="delivery-content">
+                <div class="content-block">
+                    <h3 class="section-label">OUR STORY</h3>
+                    <p class="delivery-text">
+                        We saw a need for better, more authentic food experience in Kigali. 
+                        Inspired by vibrant markets and late-night street grills, we blend traditional 
+                        spices with bold techniques to create meals that feel both nostalgic and new.
+                    </p>
+                </div>
+                
+                <div class="content-block best-yet">
+                    <div class="best-yet-header">
+                        <h2 class="best-yet-thin">OUR BEST ONE</h2>
+                        <h2 class="best-yet-bold">YET!</h2>
+                    </div>
+                    <p class="delivery-text">
+                        Sacha's Taste is the result of our dedication to bring happiness to you 
+                        through phenomenal food and an unforgettable experience.
+                    </p>
+                    <div class="best-dish-showcase">
+                        <img src="assets/sample_food (5).png" alt="Signature Dish" class="best-one-img">
+                        <div class="dish-glow"></div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="menu-header-wrap" id="menu">
-            <h2 class="menu-title-thin">CHECK OUT THE</h2>
-            <h2 class="menu-title-bold">MENU</h2>
+    </section>
+    <section class="menu" id="menu">
+        <div class="menu-header-wrap">
+            <h2 class="menu-title-thin">TASTE THE</h2>
+            <h2 class="menu-title-bold">SIGNATURES</h2>
+            <p class="menu-subtitle">Hand-crafted flavors from the heart of Kigali.</p>
+        </div>
+
+        <!-- PREMIUM 3D CAROUSEL SECTION -->
+        <div class="menu-3d-container">
+            <!-- Ambient Layer: Glow Orbs -->
+            <div class="ambient-orb orb-1"></div>
+            <div class="ambient-orb orb-2"></div>
+            
+            <div class="menu-3d-slider" id="menu3d">
+<div class="menu-3d-item" data-index="0">
+                    <div class="card-glass"></div>
+                    <div class="menu-3d-badges">
+                        <span class="badge-popular">Popular</span>
+                        <div class="item-rating" aria-label="Rating: 4.8 out of 5">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star-half-alt" aria-hidden="true"></i>
+                            <span class="rating-value">4.8</span>
+                        </div>
+                    </div>
+
+                    <img src="assets/sample_food (1).png" alt="Flame Grill Combo">
+                    <div class="menu-3d-info">
+                        <span class="category">Best Seller</span>
+                        <h3>Flame Grill Combo</h3>
+                        <div class="price-row">
+                            <span class="price">12,000</span>
+                            <span class="currency">RWF</span>
+                        </div>
+                        <button class="btn-premium add-to-cart" data-name="Flame Grill Combo" data-img="assets/sample_food (1).png">
+                            <span>Add to Cart</span>
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Other items follow same structure -->
+<div class="menu-3d-item" data-index="1">
+                    <div class="card-glass"></div>
+                    <div class="menu-3d-badges">
+                        <span class="badge-popular">Popular</span>
+                        <div class="item-rating" aria-label="Rating: 4.7 out of 5">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="far fa-star" aria-hidden="true"></i>
+                            <span class="rating-value">4.7</span>
+                        </div>
+                    </div>
+
+                    <img src="assets/sample_food (3).jpg" alt="Suya Supreme">
+                    <div class="menu-3d-info">
+                        <span class="category">Spicy</span>
+                        <h3>Suya Supreme</h3>
+                        <div class="price-row">
+                            <span class="price">8,500</span>
+                            <span class="currency">RWF</span>
+                        </div>
+                        <button class="btn-premium add-to-cart" data-name="Suya Supreme" data-img="assets/sample_food (3).jpg">
+                            <span>Add to Cart</span>
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+<div class="menu-3d-item" data-index="2">
+                    <div class="card-glass"></div>
+                    <div class="menu-3d-badges">
+                        <span class="badge-popular">Popular</span>
+                        <div class="item-rating" aria-label="Rating: 4.6 out of 5">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="far fa-star" aria-hidden="true"></i>
+                            <i class="far fa-star" aria-hidden="true"></i>
+                            <span class="rating-value">4.6</span>
+                        </div>
+                    </div>
+
+                    <img src="assets/sample_food (5).png" alt="New Rice Recipe">
+                    <div class="menu-3d-info">
+                        <span class="category">New Arrival</span>
+                        <h3>New Rice Recipe</h3>
+                        <div class="price-row">
+                            <span class="price">5,000</span>
+                            <span class="currency">RWF</span>
+                        </div>
+                        <button class="btn-premium add-to-cart" data-name="New Rice Recipe" data-img="assets/sample_food (5).png">
+                            <span>Add to Cart</span>
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+<div class="menu-3d-item" data-index="3">
+                    <div class="card-glass"></div>
+                    <div class="menu-3d-badges">
+                        <span class="badge-popular">Popular</span>
+                        <div class="item-rating" aria-label="Rating: 4.6 out of 5">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="far fa-star" aria-hidden="true"></i>
+                            <i class="far fa-star" aria-hidden="true"></i>
+                            <span class="rating-value">4.6</span>
+                        </div>
+                    </div>
+
+                    <img src="assets/sample_food (6).png" alt="Family Feast">
+                    <div class="menu-3d-info">
+                        <span class="category">Platter</span>
+                        <h3>Family Feast</h3>
+                        <div class="price-row">
+                            <span class="price">25,000</span>
+                            <span class="currency">RWF</span>
+                        </div>
+                        <button class="btn-premium add-to-cart" data-name="Family Feast" data-img="assets/sample_food (6).png">
+                            <span>Add to Cart</span>
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+<div class="menu-3d-item" data-index="4">
+                    <div class="card-glass"></div>
+                    <div class="menu-3d-badges">
+                        <span class="badge-popular">Popular</span>
+                        <div class="item-rating" aria-label="Rating: 4.5 out of 5">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="far fa-star" aria-hidden="true"></i>
+                            <i class="far fa-star" aria-hidden="true"></i>
+                            <span class="rating-value">4.5</span>
+                        </div>
+                    </div>
+
+                    <img src="assets/sample_food (4).jpg" alt="Street King Special">
+                    <div class="menu-3d-info">
+                        <span class="category">Chef's Choice</span>
+                        <h3>Street King Special</h3>
+                        <div class="price-row">
+                            <span class="price">15,000</span>
+                            <span class="currency">RWF</span>
+                        </div>
+                        <button class="btn-premium add-to-cart" data-name="Street King Special" data-img="assets/sample_food (4).jpg">
+                            <span>Add to Cart</span>
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="menu-3d-nav">
+                <button id="prev3d" class="nav-arrow prev"><i class="fas fa-long-arrow-alt-left"></i></button>
+                <div class="nav-indicator">
+                    <span class="current">01</span>
+                    <div class="progress-bar"><div class="progress-fill"></div></div>
+                    <span class="total">05</span>
+                </div>
+                <button id="next3d" class="nav-arrow next"><i class="fas fa-long-arrow-alt-right"></i></button>
+            </div>
+        </div>
+
+        <div class="menu-header-wrap">
+            <h2 class="menu-title-thin">THE FULL</h2>
+            <h2 class="menu-title-bold">CATALOGUE</h2>
         </div>
         <div class="menu-items">
-            <div class="menu-item">
-                <div class="menu-item-info">
-                    <h3 class="menu-item-name">NEW RICE Recipe</h3>
-                    <p class="menu-item-desc">A vibrant new take on rice — seasoned, satisfying, and made to elevate every meal.</p>
+
+            <div class="menu-item-card">
+                <div class="item-visual">
+                    <div class="item-badges">
+                        <span class="badge-popular">Popular</span>
+                        <div class="item-rating" aria-label="Rating: 4.8 out of 5">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star-half-alt" aria-hidden="true"></i>
+                            <span class="rating-value">4.8</span>
+                        </div>
+                    </div>
+
+                    <img src="assets/sample_food (1).png" alt="Flame Grill Combo">
+                    <button class="add-to-cart-plus" data-name="Flame Grill Combo" data-img="assets/sample_food (1).png">
+                        <i class="fas fa-plus"></i>
+                    </button>
                 </div>
-                <img src="assets/sample_food (5).png" alt="Rice Recipe" class="menu-item-img">
+                <div class="item-details">
+                    <h3 class="item-name">Flame Grill Combo</h3>
+                    <p class="item-desc">A powerful mix of flame-grilled meats and spicy sides.</p>
+                    <div class="item-footer">
+                        <span class="item-price">12,000 RWF</span>
+                    </div>
+                </div>
             </div>
-            <div class="menu-item">
-                <div class="menu-item-info">
-                    <h3 class="menu-item-name">NEW RICE Recipe</h3>
-                    <p class="menu-item-desc">A vibrant new take on rice — seasoned, satisfying, and made to elevate every meal.</p>
+
+<div class="menu-item-card">
+                <div class="item-visual">
+                    <div class="item-badges">
+                        <span class="badge-popular">Popular</span>
+                        <div class="item-rating" aria-label="Rating: 4.7 out of 5">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="far fa-star" aria-hidden="true"></i>
+                            <span class="rating-value">4.7</span>
+                        </div>
+                    </div>
+
+                    <img src="assets/sample_food (3).jpg" alt="Suya Supreme">
+                    <button class="add-to-cart-plus" data-name="Suya Supreme" data-img="assets/sample_food (3).jpg">
+                        <i class="fas fa-plus"></i>
+                    </button>
                 </div>
-                <img src="assets/sample_food (5).png" alt="Rice Recipe" class="menu-item-img">
+                <div class="item-details">
+                    <h3 class="item-name">Suya Supreme</h3>
+                    <p class="item-desc">Traditional Nigerian suya spice with a Kigali twist.</p>
+                    <div class="item-footer">
+                        <span class="item-price">8,500 RWF</span>
+                    </div>
+                </div>
             </div>
-            <div class="menu-item">
-                <div class="menu-item-info">
-                    <h3 class="menu-item-name">NEW RICE Recipe</h3>
-                    <p class="menu-item-desc">A vibrant new take on rice — seasoned, satisfying, and made to elevate every meal.</p>
+
+<div class="menu-item-card">
+                <div class="item-visual">
+                    <div class="item-badges">
+                        <span class="badge-popular">Popular</span>
+                        <div class="item-rating" aria-label="Rating: 4.6 out of 5">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                            <i class="far fa-star" aria-hidden="true"></i>
+                            <i class="far fa-star" aria-hidden="true"></i>
+                            <span class="rating-value">4.6</span>
+                        </div>
+                    </div>
+
+                    <img src="assets/sample_food (6).png" alt="Family Feast">
+                    <button class="add-to-cart-plus" data-name="Family Feast" data-img="assets/sample_food (6).png">
+                        <i class="fas fa-plus"></i>
+                    </button>
                 </div>
-                <img src="assets/sample_food (5).png" alt="Rice Recipe" class="menu-item-img">
+                <div class="item-details">
+                    <h3 class="item-name">Family Feast Box</h3>
+                    <p class="item-desc">The ultimate sharing platter for the whole crew.</p>
+                    <div class="item-footer">
+                        <span class="item-price">25,000 RWF</span>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="menu-categories">
-            <div class="menu-cat">
-                <h4>COMBO's and SPECIALS</h4>
-                <ul>
-                    <li>1. Flame Grill Combo</li>
-                    <li>2. Suya Supreme Meal</li>
-                    <li>3. Family Feast Box</li>
-                    <li>4. Street King Special</li>
-                </ul>
+    </section>
+    <section class="categories-section">
+        <div class="category-grid">
+            <div class="category-card">
+                <div class="cat-icon"><i class="fas fa-fire"></i></div>
+                <div class="cat-info">
+                    <h3 class="cat-name">Combos & Specials</h3>
+                    <p class="cat-preview">Flame Grill, Suya Supreme, Family Feasts</p>
+                    <ul class="cat-list-hidden">
+                        <li>Flame Grill Combo</li>
+                        <li>Suya Supreme Meal</li>
+                        <li>Family Feast Box</li>
+                        <li>Street King Special</li>
+                    </ul>
+                </div>
             </div>
-            <div class="menu-cat">
-                <h4>SOUCES</h4>
-                <ul>
-                    <li>1. Smoky Suya Sauce</li>
-                    <li>2. Spicy Peri-Peri</li>
-                    <li>3. Creamy Garlic &amp; Herb</li>
-                    <li>4. Sweet Chili Heat</li>
-                    <li>5. Classic Tomato Relish</li>
-                </ul>
+
+            <div class="category-card">
+                <div class="cat-icon"><i class="fas fa-pepper-hot"></i></div>
+                <div class="cat-info">
+                    <h3 class="cat-name">Signature Sauces</h3>
+                    <p class="cat-preview">Smoky Suya, Peri-Peri, Creamy Garlic</p>
+                    <ul class="cat-list-hidden">
+                        <li>Smoky Suya Sauce</li>
+                        <li>Spicy Peri-Peri</li>
+                        <li>Creamy Garlic & Herb</li>
+                        <li>Sweet Chili Heat</li>
+                    </ul>
+                </div>
             </div>
-            <div class="menu-cat">
-                <h4>SALADS</h4>
-                <ul>
-                    <li>1. Afro Crunch Salad</li>
-                    <li>2. Grilled Chicken Salad</li>
-                    <li>3. Spicy Slaw</li>
-                    <li>4. Garden Fresh Mix</li>
-                </ul>
+
+            <div class="category-card">
+                <div class="cat-icon"><i class="fas fa-leaf"></i></div>
+                <div class="cat-info">
+                    <h3 class="cat-name">Fresh Salads</h3>
+                    <p class="cat-preview">Afro Crunch, Grilled Chicken, Spicy Slaw</p>
+                    <ul class="cat-list-hidden">
+                        <li>Afro Crunch Salad</li>
+                        <li>Grilled Chicken Salad</li>
+                        <li>Spicy Slaw</li>
+                        <li>Garden Fresh Mix</li>
+                    </ul>
+                </div>
             </div>
-            <div class="menu-cat">
-                <h4>DRINKS</h4>
-                <ul>
-                    <li>1. Chilled Soft Drinks</li>
-                    <li>2. Fresh Zobo (Hibiscus)</li>
-                    <li>3. Homemade Ginger Drink</li>
-                </ul>
+
+            <div class="category-card">
+                <div class="cat-icon"><i class="fas fa-glass-whiskey"></i></div>
+                <div class="cat-info">
+                    <h3 class="cat-name">Drinks</h3>
+                    <p class="cat-preview">Fresh Zobo, Ginger Drink, Soft Drinks</p>
+                    <ul class="cat-list-hidden">
+                        <li>Chilled Soft Drinks</li>
+                        <li>Fresh Zobo (Hibiscus)</li>
+                        <li>Homemade Ginger Drink</li>
+                    </ul>
+                </div>
             </div>
-            <div class="menu-cat">
-                <h4>SIDES</h4>
-                <ul>
-                    <li>1. Golden Spiced Fries</li>
-                    <li>2. Jollof Rice</li>
-                    <li>3. Fried Plantain (Dodo)</li>
-                    <li>4. Grilled Corn</li>
-                    <li>5. Chicken Wings</li>
-                </ul>
+
+            <div class="category-card">
+                <div class="cat-icon"><i class="fas fa-drumstick-bite"></i></div>
+                <div class="cat-info">
+                    <h3 class="cat-name">Sides</h3>
+                    <p class="cat-preview">Jollof Rice, Plantain, Grilled Corn</p>
+                    <ul class="cat-list-hidden">
+                        <li>Golden Spiced Fries</li>
+                        <li>Jollof Rice</li>
+                        <li>Fried Plantain (Dodo)</li>
+                        <li>Grilled Corn</li>
+                        <li>Chicken Wings</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </section>
@@ -212,13 +560,39 @@
         <div class="discover-body">
             <div class="discover-text">
                 <h3>Real African flavor<br>No shortcuts<br>No compromises</h3>
-                <p>We didn't come here to play it safe or follow trends. We came to show you what happens when passion meets tradition — when every spice, every ingredient, and every detail matters. Mediocrity isn't in our menu. This is fast food with its soul intact.</p>
+                <p>We didn't come here to play it safe or follow trends. We came to show you what happens when passion meets tradition - when every spice, every ingredient, and every detail matters. Mediocrity isn't in our menu. This is fast food with its soul intact.</p>
             </div>
             <div class="discover-photo">
                 <img src="assets/packaging (1).jpg" alt="Sacha's Packaging">
             </div>
         </div>
+
+        <!-- FIND US / LOCATION MAP LINK -->
+        <div class="find-us-map" id="findUsMap">
+            <div class="find-us-map-inner map-link-card">
+                <div class="find-us-map-top">
+                    <h3 class="find-us-title">Find Us</h3>
+                    <p class="find-us-sub">Kigali, Rwanda</p>
+                </div>
+
+                <div class="map-preview-container">
+                    <div class="map-preview-overlay">
+                        <div class="map-preview-info">
+                            <i class="fas fa-map-marked-alt map-preview-icon"></i>
+                            <h4>Interactive Location Map</h4>
+                            <p>Locate yourself relative to Sacha's Taste, get instant distance details, and see how long it takes a hot combo to reach you!</p>
+                            <a href="map.html" class="btn-orange launch-map-btn">
+                                <span>LAUNCH MAP</span>
+                                <i class="fas fa-location-arrow"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="map-preview-bg" style="background-image: url('assets/map_preview.png');"></div>
+                </div>
+            </div>
+        </div>
     </section>
+
     <footer class="footer">
         <div class="footer-inner">
             <div class="footer-left">
@@ -229,6 +603,35 @@
         </div>
         <p class="footer-copy">&copy; 2026 Sacha's Taste. All rights reserved.</p>
     </footer>
+
+    <section class="credits" id="credits">
+        <div class="credits-container">
+            <div class="credits-scroll">
+                <h3 class="credits-title">CAPSLOCK PROJECT</h3>
+                
+                <div class="credits-group">
+                    <p class="credits-role">GROUP LEADER</p>
+                    <p class="credits-name">NADJIM</p>
+                </div>
+
+                <div class="credits-group">
+                    <p class="credits-role">TEAMMATES</p>
+                    <p class="credits-name">BONCOEUR</p>
+                    <p class="credits-name">GERVAIS</p>
+                    <p class="credits-name">MUNIRA</p>
+                    <p class="credits-name">SAMY</p>
+                    <p class="credits-name">EPHRAIM</p>
+                    <p class="credits-name">LOIC</p>
+                </div>
+
+                <div class="credits-footer">
+                    <p>THANK YOU FOR WATCHING</p>
+                    <div class="credits-logo-mini">SACHA'S TASTE</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <script src="script.js"></script>
 </body>
 </html>
