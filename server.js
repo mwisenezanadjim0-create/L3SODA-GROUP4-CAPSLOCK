@@ -2,6 +2,9 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const zlib = require('node:zlib');
+const cluster = require('node:cluster');
+const os = require('node:os');
 const { MongoClient, ObjectId } = require('mongodb');
 const sharp = require('sharp');
 const nodemailer = require('nodemailer');
@@ -17,7 +20,9 @@ const SESSION_TTL_MS = 1000 * 60 * 60 * 8;
 const VISITOR_ACTIVE_MS = 1000 * 60 * 5;
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'HAVUGIMANA DIEUDONNE';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'dodos@123';
+const DEFAULT_ADMIN_PASSWORD = 'dodos@123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 const LOG_DIR = path.join(ROOT, 'logs');
 fs.mkdirSync(LOG_DIR, { recursive: true });
@@ -27,6 +32,10 @@ const EMAIL_ENABLED = process.env.EMAIL_ENABLED === 'true';
 
 const mongo = new MongoClient(MONGODB_URI);
 let db;
+
+if (IS_PRODUCTION && !process.env.ADMIN_PASSWORD) {
+  throw new Error('ADMIN_PASSWORD must be set in production');
+}
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -57,10 +66,10 @@ function send(res, status, body, headers = {}) {
   const isPlainString = typeof body === 'string';
   const isObject = body !== null && typeof body === 'object';
   const payload = isPlainString || isBuffer ? body : isObject ? JSON.stringify(body) : String(body ?? '');
-  res.writeHead(status, {
+  res.writeHead(status, securityHeaders({
     ...(isObject && !isBuffer ? { 'Content-Type': 'application/json; charset=utf-8' } : { 'Content-Type': 'text/plain; charset=utf-8' }),
     ...headers
-  });
+  }));
   res.end(payload);
 }
 
@@ -126,6 +135,30 @@ function escapeHtml(str) {
 
 function cleanString(value, max = 500) {
   return String(value ?? '').trim().slice(0, max);
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ''));
+}
+
+function securityHeaders(extra = {}) {
+  return {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'SAMEORIGIN',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)',
+    ...extra
+  };
+}
+
+function cookieOptions(maxAge, { httpOnly = true, sameSite = 'Strict' } = {}) {
+  return [
+    httpOnly ? 'HttpOnly' : '',
+    `SameSite=${sameSite}`,
+    'Path=/',
+    `Max-Age=${Math.floor(maxAge)}`,
+    (IS_PRODUCTION || process.env.COOKIE_SECURE === 'true') ? 'Secure' : ''
+  ].filter(Boolean).join('; ');
 }
 
 function publicDoc(doc) {
@@ -376,6 +409,14 @@ async function touchVisitor(req, page = 'home') {
 
 const rateState = new Map();
 
+// ── FIX 1: Clean up stale rate limit entries every 30 minutes to prevent memory leak ──
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of rateState.entries()) {
+    if (now - val.firstTs > 15 * 60 * 1000) rateState.delete(key);
+  }
+}, 30 * 60 * 1000);
+
 function rateLimit(key, { windowMs, max }) {
   const now = Date.now();
   const cur = rateState.get(key);
@@ -400,11 +441,17 @@ async function handleApi(req, res, pathname) {
 
   if (req.method === 'GET' && pathname === '/api/settings') {
     const settings = await db.collection('settings').findOne({ _id: 'site_settings' });
-    send(res, 200, { settings: settings || {} });
+    send(res, 200, publicDoc(settings) || {});
     return;
   }
 
   if (req.method === 'POST' && pathname === '/api/inquiries') {
+    const ip = visitorIp(req) || 'unknown';
+    const rl = rateLimit(`inquiry:${ip}`, { windowMs: 15 * 60 * 1000, max: 8 });
+    if (!rl.allowed) {
+      send(res, 429, { error: 'Too many messages. Try again later.' });
+      return;
+    }
     let body;
     try {
       body = await readJsonBody(req);
@@ -425,6 +472,10 @@ async function handleApi(req, res, pathname) {
       send(res, 400, { error: 'All fields are required' });
       return;
     }
+    if (!isValidEmail(inquiry.email)) {
+      send(res, 400, { error: 'A valid email address is required' });
+      return;
+    }
     await db.collection('inquiries').insertOne(inquiry);
     sendInquiryEmails(inquiry).catch(err => console.error('Failed to send inquiry emails:', err));
     send(res, 201, { ok: true });
@@ -441,7 +492,7 @@ async function handleApi(req, res, pathname) {
     }
     const visitor = await touchVisitor(req, body.page || 'home');
     send(res, 200, { ok: true }, visitor.isNew ? {
-      'Set-Cookie': `dodos_visitor=${visitor.token}; SameSite=Lax; Path=/; Max-Age=${60 * 60 * 24 * 365}`
+      'Set-Cookie': `dodos_visitor=${visitor.token}; ${cookieOptions(60 * 60 * 24 * 365, { httpOnly: false, sameSite: 'Lax' })}`
     } : {});
     return;
   }
@@ -480,7 +531,7 @@ async function handleApi(req, res, pathname) {
       createdAt: new Date().toISOString()
     });
     send(res, 200, { ok: true, user: { username: admin.username } }, {
-      'Set-Cookie': `dodos_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_MS / 1000}, dodos_csrf=${csrfToken}; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`
+      'Set-Cookie': `dodos_session=${token}; ${cookieOptions(SESSION_TTL_MS / 1000)}, dodos_csrf=${csrfToken}; ${cookieOptions(SESSION_TTL_MS / 1000, { httpOnly: false })}`
     });
     return;
   }
@@ -488,7 +539,7 @@ async function handleApi(req, res, pathname) {
   if (req.method === 'POST' && pathname === '/api/admin/logout') {
     const token = getCookie(req, 'dodos_session');
     if (token) await db.collection('sessions').deleteOne({ token });
-    send(res, 200, { ok: true }, { 'Set-Cookie': 'dodos_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0, dodos_csrf=; SameSite=Strict; Path=/; Max-Age=0' });
+    send(res, 200, { ok: true }, { 'Set-Cookie': `dodos_session=; ${cookieOptions(0)}, dodos_csrf=; ${cookieOptions(0, { httpOnly: false })}` });
     return;
   }
 
@@ -512,6 +563,208 @@ async function handleApi(req, res, pathname) {
     };
     await db.collection('settings').updateOne({ _id: 'site_settings' }, { $set: update }, { upsert: true });
     send(res, 200, { ok: true, settings: update });
+    return;
+  }
+
+  // Forgot password - request password reset
+  if (req.method === 'POST' && pathname === '/api/admin/forgot-password') {
+    let body;
+    try {
+      body = await readJsonBody(req);
+    } catch {
+      send(res, 400, { error: 'Invalid JSON' });
+      return;
+    }
+    const email = cleanString(body.email || '', 160).toLowerCase();
+    const username = cleanString(body.username || '', 120);
+    
+    if (!email && !username) {
+      send(res, 400, { error: 'Email or username is required' });
+      return;
+    }
+    
+    const admin = await db.collection('admins').findOne({ username });
+    if (!admin) {
+      send(res, 200, { ok: true, message: 'If an account exists, a reset link has been sent.' });
+      return;
+    }
+    
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetExpires = Date.now() + 60 * 60 * 1000;
+    
+    await db.collection('admins').updateOne(
+      { _id: admin._id },
+      { $set: { resetToken, resetExpires } }
+    );
+    
+    console.log(`Password reset token for ${username}: ${resetToken}`);
+    console.log(`Reset link: http://localhost:${PORT}/reset-password?token=${resetToken}`);
+    
+    if (EMAIL_ENABLED && email) {
+      try {
+        const resetLink = `${process.env.FRONTEND_URL || `http://localhost:${PORT}`}/reset-password?token=${resetToken}`;
+        await transporter.sendMail({
+          from: `"Dodos Car Limited" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: 'Password Reset Request - Dodos Car Limited',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
+              <h2 style="color: #e85d26;">Password Reset Request</h2>
+              <p>You requested to reset your password for Dodos Car Limited admin account.</p>
+              <p>Click the link below to reset your password:</p>
+              <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #e85d26; color: #fff; text-decoration: none; border-radius: 4px;">Reset Password</a>
+              <p>This link expires in 1 hour.</p>
+              <p>If you didn't request this, please ignore this email.</p>
+            </div>
+          `
+        });
+      } catch (err) {
+        console.error('Failed to send reset email:', err);
+      }
+    }
+    
+    send(res, 200, { ok: true, message: 'If an account exists, a reset link has been sent.' });
+    return;
+  }
+
+  // User forgot password
+  if (req.method === 'POST' && pathname === '/api/user/forgot-password') {
+    let body;
+    try {
+      body = await readJsonBody(req);
+    } catch {
+      send(res, 400, { error: 'Invalid JSON' });
+      return;
+    }
+    const email = cleanString(body.email || '', 160).toLowerCase();
+    
+    if (!email) {
+      send(res, 400, { error: 'Email is required' });
+      return;
+    }
+    
+    const user = await db.collection('users').findOne({ email });
+    if (!user) {
+      send(res, 200, { ok: true, message: 'If an account exists, a reset link has been sent.' });
+      return;
+    }
+    
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetExpires = Date.now() + 60 * 60 * 1000;
+    
+    await db.collection('users').updateOne(
+      { _id: user._id },
+      { $set: { resetToken, resetExpires } }
+    );
+    
+    console.log(`User password reset token for ${email}: ${resetToken}`);
+    
+    if (EMAIL_ENABLED) {
+      try {
+        const resetLink = `${process.env.FRONTEND_URL || `http://localhost:${PORT}`}/reset-password?token=${resetToken}`;
+        await transporter.sendMail({
+          from: `"Dodos Car Limited" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: 'Password Reset Request - Dodos Car Limited',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
+              <h2 style="color: #e85d26;">Password Reset Request</h2>
+              <p>You requested to reset your password for Dodos Car Limited account.</p>
+              <p>Click the link below to reset your password:</p>
+              <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #e85d26; color: #fff; text-decoration: none; border-radius: 4px;">Reset Password</a>
+              <p>This link expires in 1 hour.</p>
+              <p>If you didn't request this, please ignore this email.</p>
+            </div>
+          `
+        });
+      } catch (err) {
+        console.error('Failed to send reset email:', err);
+      }
+    }
+    
+    send(res, 200, { ok: true, message: 'If an account exists, a reset link has been sent.' });
+    return;
+  }
+
+  // Reset password with token
+  if (req.method === 'POST' && pathname === '/api/admin/reset-password') {
+    let body;
+    try {
+      body = await readJsonBody(req);
+    } catch {
+      send(res, 400, { error: 'Invalid JSON' });
+      return;
+    }
+    const token = cleanString(body.token || '', 128);
+    const newPassword = String(body.newPassword || '');
+    
+    if (!token || newPassword.length < 6) {
+      send(res, 400, { error: 'Token and new password (min 6 chars) are required' });
+      return;
+    }
+    
+    const admin = await db.collection('admins').findOne({
+      resetToken: token,
+      resetExpires: { $gt: Date.now() }
+    });
+    
+    if (!admin) {
+      send(res, 400, { error: 'Invalid or expired reset token' });
+      return;
+    }
+    
+    await db.collection('admins').updateOne(
+      { _id: admin._id },
+      { 
+        $set: { passwordHash: hashPassword(newPassword) },
+        $unset: { resetToken: '', resetExpires: '' }
+      }
+    );
+    
+    await db.collection('sessions').deleteMany({ adminId: admin._id });
+    
+    send(res, 200, { ok: true, message: 'Password reset successful' });
+    return;
+  }
+
+  // User reset password with token
+  if (req.method === 'POST' && pathname === '/api/user/reset-password') {
+    let body;
+    try {
+      body = await readJsonBody(req);
+    } catch {
+      send(res, 400, { error: 'Invalid JSON' });
+      return;
+    }
+    const token = cleanString(body.token || '', 128);
+    const newPassword = String(body.newPassword || '');
+    
+    if (!token || newPassword.length < 6) {
+      send(res, 400, { error: 'Token and new password (min 6 chars) are required' });
+      return;
+    }
+    
+    const user = await db.collection('users').findOne({
+      resetToken: token,
+      resetExpires: { $gt: Date.now() }
+    });
+    
+    if (!user) {
+      send(res, 400, { error: 'Invalid or expired reset token' });
+      return;
+    }
+    
+    await db.collection('users').updateOne(
+      { _id: user._id },
+      { 
+        $set: { passwordHash: hashPassword(newPassword) },
+        $unset: { resetToken: '', resetExpires: '' }
+      }
+    );
+    
+    await db.collection('user_sessions').deleteMany({ userId: user._id });
+    
+    send(res, 200, { ok: true, message: 'Password reset successful' });
     return;
   }
 
@@ -581,6 +834,30 @@ async function handleApi(req, res, pathname) {
     return;
   }
 
+  if (req.method === 'GET' && pathname === '/api/admin/stats') {
+    if (!await requireAdmin(req, res)) return;
+    const [totalCars, availableCars, soldCars, inquiries, users, activeUsers, visitors] = await Promise.all([
+      db.collection('cars').countDocuments(),
+      db.collection('cars').countDocuments({ status: /available/i }),
+      db.collection('cars').countDocuments({ status: /sold/i }),
+      db.collection('inquiries').countDocuments(),
+      db.collection('users').countDocuments(),
+      db.collection('user_sessions').countDocuments({ expiresAt: { $gt: Date.now() } }),
+      db.collection('visitors').countDocuments()
+    ]);
+    send(res, 200, {
+      totalCars,
+      availableCars,
+      soldCars,
+      inquiries,
+      users,
+      activeUsers,
+      visitors,
+      uptimeSeconds: Math.round(process.uptime())
+    });
+    return;
+  }
+
   if (req.method === 'POST' && pathname === '/api/user/register') {
     let body;
     try {
@@ -594,6 +871,10 @@ async function handleApi(req, res, pathname) {
     const password = String(body.password || '');
     if (!username || !email || password.length < 6) {
       send(res, 400, { error: 'Username, email, and password (min 6 chars) are required' });
+      return;
+    }
+    if (!isValidEmail(email)) {
+      send(res, 400, { error: 'A valid email address is required' });
       return;
     }
     const emailVerificationToken = crypto.randomBytes(32).toString('hex');
@@ -653,7 +934,7 @@ async function handleApi(req, res, pathname) {
     });
     await db.collection('users').updateOne({ _id: user._id }, { $set: { lastLogin: Date.now() } });
     send(res, 200, { ok: true, user: { username: user.username, email: user.email } }, {
-      'Set-Cookie': `dodos_user_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_MS / 1000}`
+      'Set-Cookie': `dodos_user_session=${token}; ${cookieOptions(SESSION_TTL_MS / 1000)}`
     });
     return;
   }
@@ -661,7 +942,7 @@ async function handleApi(req, res, pathname) {
   if (req.method === 'POST' && pathname === '/api/user/logout') {
     const token = getCookie(req, 'dodos_user_session');
     if (token) await db.collection('user_sessions').deleteOne({ token });
-    send(res, 200, { ok: true }, { 'Set-Cookie': 'dodos_user_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0' });
+    send(res, 200, { ok: true }, { 'Set-Cookie': `dodos_user_session=; ${cookieOptions(0)}` });
     return;
   }
 
@@ -756,10 +1037,80 @@ async function handleApi(req, res, pathname) {
   send(res, 404, { error: 'API route not found' });
 }
 
+// ── FIX 2: Static file MIME types with cache durations ──
+const STATIC_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.pdf': 'application/pdf'
+};
+
+// Cache durations per type: images/assets cached 7 days, HTML 1 hour
+const CACHE_CONTROL = {
+  '.html': 'public, max-age=3600',
+  '.js':   'public, max-age=86400',
+  '.css':  'public, max-age=86400',
+  '.jpg':  'public, max-age=604800',
+  '.jpeg': 'public, max-age=604800',
+  '.png':  'public, max-age=604800',
+  '.webp': 'public, max-age=604800',
+  '.gif':  'public, max-age=604800',
+  '.pdf':  'public, max-age=86400'
+};
+
+// Compressible text types
+const COMPRESSIBLE = new Set([
+  'text/html; charset=utf-8',
+  'text/javascript; charset=utf-8',
+  'text/css; charset=utf-8'
+]);
+
+// ── FIX 3: gzip compression helper ──
+function sendCompressed(req, res, status, data, contentType, extraHeaders = {}) {
+  const acceptEncoding = req.headers['accept-encoding'] || '';
+  const headers = securityHeaders({
+    'Content-Type': contentType,
+    ...extraHeaders
+  });
+
+  if (COMPRESSIBLE.has(contentType) && acceptEncoding.includes('gzip')) {
+    zlib.gzip(data, (err, compressed) => {
+      if (err) {
+        res.writeHead(status, headers);
+        res.end(req.method === 'HEAD' ? undefined : data);
+        return;
+      }
+      res.writeHead(status, { ...headers, 'Content-Encoding': 'gzip', 'Vary': 'Accept-Encoding' });
+      res.end(req.method === 'HEAD' ? undefined : compressed);
+    });
+  } else {
+    res.writeHead(status, headers);
+    res.end(req.method === 'HEAD' ? undefined : data);
+  }
+}
+
 function serveStatic(req, res, pathname) {
-  const requested = pathname === '/' || pathname === '/manage-dodos-showroom-9f8d2b' ? 'claude.html' : pathname.slice(1);
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    send(res, 405, { error: 'Method not allowed' }, { Allow: 'GET, HEAD' });
+    return;
+  }
+  let requested;
+  try {
+    requested = pathname === '/' || pathname === '/claude' || pathname === '/manage-dodos-showroom-9f8d2b'
+      ? 'claude.html'
+      : decodeURIComponent(pathname.slice(1));
+  } catch {
+    send(res, 400, 'Bad request');
+    return;
+  }
   const filePath = path.resolve(ROOT, requested);
-  if (!filePath.startsWith(ROOT)) {
+  const relativePath = path.relative(ROOT, filePath);
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
     send(res, 403, 'Forbidden');
     return;
   }
@@ -769,19 +1120,12 @@ function serveStatic(req, res, pathname) {
       return;
     }
     const ext = path.extname(filePath).toLowerCase();
-    const types = {
-      '.html': 'text/html; charset=utf-8',
-      '.js': 'text/javascript; charset=utf-8',
-      '.css': 'text/css; charset=utf-8',
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.webp': 'image/webp',
-      '.gif': 'image/gif',
-      '.pdf': 'application/pdf'
-    };
-    res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream' });
-    res.end(data);
+    const contentType = STATIC_TYPES[ext] || 'application/octet-stream';
+    const cacheControl = CACHE_CONTROL[ext] || 'public, max-age=3600';
+
+    sendCompressed(req, res, 200, data, contentType, {
+      'Cache-Control': cacheControl
+    });
   });
 }
 
@@ -797,6 +1141,7 @@ async function ensureMongo() {
     db.collection('user_sessions').createIndex({ token: 1 }, { unique: true }),
     db.collection('user_sessions').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
     db.collection('cars').createIndex({ createdAt: -1 }),
+    db.collection('cars').createIndex({ status: 1 }),
     db.collection('inquiries').createIndex({ createdAt: -1 }),
     db.collection('visitors').createIndex({ token: 1 }, { unique: true }),
     db.collection('visitors').createIndex({ lastSeen: -1 })
@@ -807,10 +1152,12 @@ async function ensureMongo() {
     {
       $set: {
         username: ADMIN_USERNAME,
-        passwordHash: hashPassword(ADMIN_PASSWORD),
         updatedAt: new Date().toISOString()
       },
-      $setOnInsert: { createdAt: new Date().toISOString() }
+      $setOnInsert: {
+        passwordHash: hashPassword(ADMIN_PASSWORD),
+        createdAt: new Date().toISOString()
+      }
     },
     { upsert: true }
   );
@@ -850,10 +1197,32 @@ async function start() {
     console.log(`Dodos MongoDB website running at http://127.0.0.1:${PORT}`);
     console.log(`MongoDB database: ${MONGODB_DB}`);
     console.log(`Admin username: ${ADMIN_USERNAME}`);
+    if (!process.env.ADMIN_PASSWORD) {
+      console.warn('Using the development admin password fallback. Set ADMIN_PASSWORD in .env before deployment.');
+    }
+    // ── FIX 4: Log which worker is running (cluster mode) ──
+    if (cluster.worker) {
+      console.log(`Worker ${cluster.worker.id} started (PID ${process.pid})`);
+    }
   });
 }
 
-start().catch(error => {
-  console.error('Failed to start MongoDB backend:', error);
-  process.exit(1);
-});
+// ── FIX 4: Cluster mode — use all CPU cores ──
+const clusterWorkers = Number(process.env.WEB_CONCURRENCY || (IS_PRODUCTION ? os.cpus().length : 1));
+const shouldCluster = cluster.isPrimary && clusterWorkers > 1 && process.env.CLUSTER_ENABLED !== 'false';
+
+if (shouldCluster) {
+  console.log(`Primary process ${process.pid} starting ${clusterWorkers} workers...`);
+  for (let i = 0; i < clusterWorkers; i++) {
+    cluster.fork();
+  }
+  cluster.on('exit', (worker, code, signal) => {
+    console.warn(`Worker ${worker.process.pid} died (${signal || code}). Restarting...`);
+    cluster.fork();
+  });
+} else {
+  start().catch(error => {
+    console.error('Failed to start MongoDB backend:', error);
+    process.exit(1);
+  });
+}
